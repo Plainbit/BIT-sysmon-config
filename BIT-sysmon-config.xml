@@ -1,0 +1,1764 @@
+<!--
+
+######   ##        #####    ####    ######   ######    ####    ######   
+##   ##  ##       ##   ##    ##     ##   ##  ##   ##    ##       ##     
+##   ##  ##       ##   ##    ##     ##   ##  ##   ##    ##       ##     
+######   ##       #######    ##     ##   ##  ######     ##       ##     
+##       ##       ##   ##    ##     ##   ##  ##   ##    ##       ##     
+##       ##       ##   ##    ##     ##   ##  ##   ##    ##       ##     
+##       #######  ##   ##   ####    ##   ##  ######    ####      ##     
+
+ #####    ##  ##   #####    #####    #####   ###### 		 #####    #####   ######   #######   ####     #####   ##   ##  ######   #######  
+##   ##   ##  ##  ##   ##  ## # ##  ##   ##  ##   ##  		##   ##  ##   ##  ##   ##  ##         ##     ##   ##  ##   ##  ##   ##  ## 
+##        ##  ##  ##       ## # ##  ##   ##  ##   ##  		##       ##   ##  ##   ##  ##         ##     ##       ##   ##  ##   ##  ##     
+ #####     ####    #####   ## # ##  ##   ##  ##   ##  		##       ##   ##  ##   ##  #####      ##     ## ###   ##   ##  ######   #####    
+     ##     ##         ##  ##   ##  ##   ##  ##   ##  		##       ##   ##  ##   ##  ##         ##     ##   ##  ##   ##  ##   ##  ##   
+##   ##     ##    ##   ##  ##   ##  ##   ##  ##   ##  		##   ##  ##   ##  ##   ##  ##         ##     ##   ##  ##   ##  ##   ##  ##  
+ #####      ##     #####   ##   ##   #####   ##   ##  		 #####    #####   ##   ##  ##        ####     #####    #####   ##   ##  #######  
+
+-->
+<!-- BIT-sysmon-config v1.0 -->
+<!-- Update Date: 2023-10-20 -->
+<Sysmon schemaversion="4.90">
+	<!-- Configure Entries -->
+	<HashAlgorithms>SHA1,IMPHASH</HashAlgorithms>
+	<ArchiveDirectory>SYSMON_Archive</ArchiveDirectory>
+	
+	<!-- Event Filtering -->
+	<EventFiltering>
+		<!-- Event ID 1. Process create -->
+		<!-- 설명: Process create 이벤트는 새로 생성된 프로세스에 대한 정보를 제공한다. -->
+		<RuleGroup name="" groupRelation="or">
+			<ProcessCreate onmatch="include">
+				<Image condition="begin with">C:\PerfLogs\</Image> <!-- 공격자가 주로 활용하는 시스템 경로에서 생성된 프로세스 탐지 -->
+				<Image condition="begin with">C:\$Recycle.bin\</Image>
+				<Image condition="begin with">C:\Users\Default\</Image>
+				<Image condition="begin with">C:\Users\Public\</Image>
+				<Image condition="begin with">C:\Windows\Fonts\</Image>
+				<Image condition="begin with">C:\Windows\Debug\</Image>
+				<Image condition="begin with">C:\Windows\Media\</Image>
+				<Image condition="begin with">C:\Windows\Help\</Image>
+				<Image condition="begin with">C:\Windows\system32\config\systemprofile\</Image>
+				<Image condition="contains">VolumeShadowCopy</Image>
+				<Image condition="contains">\Temp\</Image>
+				<Image condition="contains">\Downloads\</Image>
+				<Image condition="contains">\Desktop\</Image>
+				<Image condition="contains">\Appdata\Local\</Image>
+				
+				<OriginalFileName condition="is">PsKill.exe</OriginalFileName> <!-- PsKill을 사용하여 프로세스 종료하는 것을 탐지 -->
+				<OriginalFileName condition="is">xcopy.exe</OriginalFileName>
+				<ParentImage condition="image">mshta.exe</ParentImage> <!-- Microsoft HTML 응용 프로그램(HTA) 파일을 실행하는 프로세스 탐지 -->
+				<CommandLine name="Remote Commands" condition="contains all">cmd;/c</CommandLine> <!-- xp_cmdshell, psexec 등  원격 명령어 실행 탐지-->
+				<OriginalFileName condition="is">at.exe</OriginalFileName>
+				<OriginalFileName condition="is">devicecredentialdeployment.exe</OriginalFileName>
+				<OriginalFileName condition="is">pnputil.exe</OriginalFileName> <!-- 악성 드라이버 설치에 사용되는 것을 탐지 -->
+				
+				<OriginalFileName condition="is">ScreenConnect.exe</OriginalFileName>
+				<OriginalFileName condition="is">Socks.exe</OriginalFileName>
+				<OriginalFileName condition="is">Socks2.exe</OriginalFileName>
+				<OriginalFileName condition="is">winscp.exe</OriginalFileName>
+				<OriginalFileName condition="is">ProcessHacker.exe</OriginalFileName>
+				<OriginalFileName condition="is">psexec64.exe</OriginalFileName>
+				<OriginalFileName condition="is">file64.exe</OriginalFileName>
+				<OriginalFileName condition="is">Backstab.exe</OriginalFileName>
+				<OriginalFileName condition="contains">PassView</OriginalFileName>
+				<OriginalFileName condition="contains">metasploit</OriginalFileName>
+				<OriginalFileName condition="is">BloodHound.exe</OriginalFileName>
+				<OriginalFileName condition="is">SharpHound.exe</OriginalFileName>
+				
+				
+				<Rule name="PowerShell" groupRelation="or"> <!-- PowerShell 프로세스 탐지 -->
+					<ParentImage condition="image">powershell.exe</ParentImage>
+					<OriginalFileName condition="image">powershell.exe</OriginalFileName>
+					<OriginalFileName condition="image">powershell_ise.exe</OriginalFileName>
+					<OriginalFileName condition="contains">Sqlps.exe</OriginalFileName>
+					<OriginalFileName condition="contains">SQLToolsPS.exe</OriginalFileName>
+					<CommandLine condition="contains">pester</CommandLine>
+				</Rule>
+				
+				<Rule name="Reconnaissance" groupRelation="or"> <!-- 공격자가 시스템 정찰 시 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">whoami.exe</OriginalFileName>
+					<OriginalFileName condition="is">ipconfig.exe</OriginalFileName>
+					<OriginalFileName condition="is">tasklist.exe</OriginalFileName>
+					<OriginalFileName condition="is">systeminfo.exe</OriginalFileName>
+					<OriginalFileName condition="is">netstat.exe</OriginalFileName>
+					<OriginalFileName condition="is">nslookup.exe</OriginalFileName>
+					<OriginalFileName condition="is">tracert.exe</OriginalFileName>
+					<OriginalFileName condition="is">route.exe</OriginalFileName>
+					<OriginalFileName condition="is">klist.exe</OriginalFileName>
+					<OriginalFileName condition="is">cmdkey.exe</OriginalFileName>
+					<CommandLine condition="contains any">dir C:\users;ls C:\users;dir C:\Users;ls C:\Users</CommandLine>
+					<OriginalFileName condition="is">quser.exe</OriginalFileName>
+					<OriginalFileName condition="contains any">nltest.exe;nltestk.exe</OriginalFileName>
+					<OriginalFileName condition="contains any">nbtstat.exe;nbtinfo.exe</OriginalFileName>
+					<OriginalFileName condition="is">netsh.exe</OriginalFileName>
+					<CommandLine condition="contains">netsh advfirewall</CommandLine>
+					<OriginalFileName condition="contains any">ping.exe</OriginalFileName>
+					<OriginalFileName condition="contains any">dsquery.exe</OriginalFileName>
+					<CommandLine condition="contains any">net view;net group</CommandLine>
+					<OriginalFileName condition="image">qprocess.exe</OriginalFileName>
+					<OriginalFileName condition="image">query.exe</OriginalFileName>
+					<OriginalFileName condition="image">qwinsta.exe</OriginalFileName>
+					<OriginalFileName condition="image">rwinsta.exe</OriginalFileName>
+					<OriginalFileName condition="contains any">tree.com;findstr.exe;where.exe</OriginalFileName>
+					<OriginalFileName condition="is">pktmon.exe</OriginalFileName>
+					<OriginalFileName condition="is">net64.exe</OriginalFileName>
+					<OriginalFileName condition="is">ADfind.exe</OriginalFileName>
+					<OriginalFileName condition="is">netscan.exe</OriginalFileName>
+					<OriginalFileName condition="is">NetworkShare_pre2.exe</OriginalFileName>
+				</Rule>
+				
+				<Rule name="Credential Access" groupRelation="or"> <!-- 공격자가 자격증명 탈취에 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">mimikatz.exe</OriginalFileName>
+					<OriginalFileName condition="is">rdrleakdiag.exe</OriginalFileName>
+					<OriginalFileName condition="is">dump64.exe</OriginalFileName>
+					<OriginalFileName condition="is">DumpMinitool.exe</OriginalFileName>
+					<OriginalFileName condition="is">sqldumper.exe</OriginalFileName>
+					<OriginalFileName condition="is">procdump.exe</OriginalFileName>
+					<OriginalFileName condition="is">rpcping.exe</OriginalFileName>
+					<OriginalFileName condition="is">createdump.exe</OriginalFileName>
+				</Rule>
+				
+				<Rule name="Ingress Tool Transfer" groupRelation="or"> <!-- 공격자가 도구를 시스템에 전송할 때 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">expand.exe</OriginalFileName>
+					<OriginalFileName condition="is">IEExec.exe</OriginalFileName>
+					<OriginalFileName condition="is">Print.Exe</OriginalFileName>
+					<OriginalFileName condition="is">curl.exe</OriginalFileName>
+					<ParentImage condition="image">ftp.exe</ParentImage>
+					<OriginalFileName condition="is">appinstaller.exe</OriginalFileName>
+					<OriginalFileName condition="is">certreq.exe</OriginalFileName>
+					<OriginalFileName condition="is">cmdl32.exe</OriginalFileName>
+					<OriginalFileName condition="is">configsecuritypolicy.exe</OriginalFileName>
+					<OriginalFileName condition="is">diantz.exe</OriginalFileName>
+					<OriginalFileName condition="is">esentutl.exe</OriginalFileName>
+					<OriginalFileName condition="is">extrac32.exe</OriginalFileName>
+					<OriginalFileName condition="is">finger.exe</OriginalFileName>
+					<OriginalFileName condition="is">hh.exe</OriginalFileName>
+					<OriginalFileName condition="is">IMEWDBLD.exe</OriginalFileName>
+					<OriginalFileName condition="is">installutil.exe</OriginalFileName>
+					<OriginalFileName condition="is">ldifde.exe</OriginalFileName>
+					<OriginalFileName condition="is">makecab.exe</OriginalFileName>
+					<OriginalFileName condition="is">MpCmdRun.exe</OriginalFileName>
+					<OriginalFileName condition="is">PrintBrm.exe</OriginalFileName>
+					<OriginalFileName condition="is">tar.exe</OriginalFileName>
+					<OriginalFileName condition="is">winget.exe</OriginalFileName>
+					<OriginalFileName condition="is">MsoHtmEd.exe</OriginalFileName>
+					<OriginalFileName condition="is">Mspub.exe</OriginalFileName>
+					<OriginalFileName condition="is">Powerpnt.exe</OriginalFileName>
+					<OriginalFileName condition="is">ProtocolHandler.exe</OriginalFileName>
+				</Rule>
+				
+				<Rule name="File Permissions Modification" groupRelation="or"> <!-- 공격자가 파일 권한 변경 시 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">takeown.exe</OriginalFileName>
+					<Image condition="image">forfiles.exe</Image>
+					<OriginalFileName condition="contains any">icacls.exe;cacls.exe;xcacls.exe</OriginalFileName>
+				</Rule>
+				
+				<Rule name="Access Token Manipulation" groupRelation="or"> <!-- 공격자가 권한 상승을 위한 액세스 토큰 조작 시 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">runas.exe</OriginalFileName>
+					<CommandLine condition="contains">runas</CommandLine>
+				</Rule>
+				
+				<Rule name="Bypass User Access Control" groupRelation="or"> <!-- 공격자가 UAC 우회할 때 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">WSReset.exe</OriginalFileName>
+					<OriginalFileName condition="is">xwizard.exe</OriginalFileName>
+					<OriginalFileName condition="is">computerdefaults.exe</OriginalFileName>
+					<OriginalFileName condition="is">dism.exe</OriginalFileName>
+					<OriginalFileName condition="is">fodhelper.exe</OriginalFileName>
+					<OriginalFileName condition="is">mmc.exe</OriginalFileName>
+				</Rule>
+				
+				<Rule name="Inhibit System Recovery" groupRelation="or">
+					<CommandLine condition="contains all">vssadmin.exe;delete</CommandLine> <!-- 볼륨 섀도 복사본을 삭제하는 것을 탐지 -->
+					<CommandLine condition="contains all">wbadmin.exe;delete</CommandLine> <!-- Windows 백업 카탈로그를 삭제하는 것을 탐지 -->
+				</Rule>
+				
+				<Rule name="Indirect Command Execution" groupRelation="or"> <!-- 공격자가 간접 명령 실행에 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="image">pcalua.exe</OriginalFileName>
+					<OriginalFileName condition="is">cscript.exe</OriginalFileName>
+					<OriginalFileName condition="is">wscript.exe</OriginalFileName>
+					<ParentImage condition="image">pcalua.exe</ParentImage>
+					<ParentImage condition="image">cscript.exe</ParentImage>
+					<ParentImage condition="image">wscript.exe</ParentImage>
+					<OriginalFileName condition="is">bash.exe</OriginalFileName>
+					<OriginalFileName condition="is">certutil.exe</OriginalFileName>
+					<OriginalFileName condition="is">winrs.exe</OriginalFileName>
+					<ParentImage condition="image">control.exe</ParentImage>
+					<OriginalFileName condition="is">desktopimgdownldr.exe</OriginalFileName>
+					<ParentImage condition="is">wsl.exe</ParentImage>
+					<OriginalFileName condition="is">aspnet_compiler.exe</OriginalFileName>
+					<OriginalFileName condition="is">atbroker.exe</OriginalFileName>
+					<OriginalFileName condition="is">bitsadmin.exe</OriginalFileName>
+					<OriginalFileName condition="is">certoc.exe</OriginalFileName>
+					<OriginalFileName condition="is">dnscmd.exe</OriginalFileName>
+					<OriginalFileName condition="is">setres.exe</OriginalFileName>
+					<OriginalFileName condition="is">ssh.exe</OriginalFileName>
+					<OriginalFileName condition="is">unregmp2.exe</OriginalFileName>
+					<ParentImage condition="image">wlrmdr.exe</ParentImage>
+					<OriginalFileName condition="is">wt.exe</OriginalFileName>
+					<OriginalFileName condition="is">devinit.exe</OriginalFileName>
+					<ParentImage condition="image">OpenConsole.exe</ParentImage>
+					<OriginalFileName condition="is">te.exe</OriginalFileName>
+				</Rule>
+				
+				<Rule name="System Binary Proxy Execution" groupRelation="or"> <!-- 공격자가 방어 회피를 위해 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">InfDefaultInstall.exe</OriginalFileName>
+					<OriginalFileName condition="is">extexport.exe</OriginalFileName>
+					<OriginalFileName condition="is">msconfig.exe</OriginalFileName>
+					<OriginalFileName condition="is">msiexec.exe</OriginalFileName>
+					<OriginalFileName condition="is">odbcconf.exe</OriginalFileName>
+					<OriginalFileName condition="is">PresentationHost.exe</OriginalFileName>
+					<OriginalFileName condition="is">rasdlui.exe</OriginalFileName>
+					<OriginalFileName condition="is">RegisterCimProvider2.exe</OriginalFileName>
+					<OriginalFileName condition="is">RegisterCimProvider.exe</OriginalFileName>
+					<OriginalFileName condition="is">Scriptrunner.exe</OriginalFileName>
+					<OriginalFileName condition="is">verclsid.exe</OriginalFileName>
+					<OriginalFileName condition="is">wab.exe</OriginalFileName>
+					<ParentImage condition="is">wab.exe</ParentImage>
+					<ParentImage condition="is">wsreset.exe</ParentImage>
+					<CommandLine condition="contains">xwizard RunWizard</CommandLine>
+					<OriginalFileName condition="is">Appvlp.exe</OriginalFileName>
+					<CommandLine condition="contains">bginfo</CommandLine>
+					<ParentCommandLine condition="is">bginfo</ParentCommandLine>
+					<CommandLine condition="contains">cbd</CommandLine>
+					<ParentCommandLine condition="contains">csi.exe</ParentCommandLine>
+					<OriginalFileName condition="is">csi.exe</OriginalFileName>
+					<ParentCommandLine condition="contains">devtoolslauncher.exe LaunchForDeploy</ParentCommandLine>
+					<ParentImage condition="is">devtoolslauncher.exe</ParentImage>
+					<CommandLine condition="contains">runscripthelper.exe surfacecheck</CommandLine>
+					<CommandLine condition="contains">Scriptrunner.exe -appvscript</CommandLine>
+					<OriginalFileName condition="contains">Scriptrunner.exe</OriginalFileName>
+					<OriginalFileName condition="is">tttracer.exe</OriginalFileName>
+					<OriginalFileName condition="is">msdt.exe</OriginalFileName>
+					<OriginalFileName condition="is">rasautou.exe</OriginalFileName>
+					<OriginalFileName condition="is">Register-cimprovider.exe</OriginalFileName>
+					<Image condition="is">diskshadow.exe</Image>
+					<CommandLine condition="contains all">diskshadow.exe;/s</CommandLine>
+					<CommandLine condition="contains all">diskshadow.exe;-s</CommandLine>
+					<OriginalFileName condition="is">replace.exe</OriginalFileName>
+					<Image condition="image">jjs.exe</Image>
+					<Image condition="image">appcmd.exe</Image>
+					<CommandLine condition="contains">ieexec.exe http</CommandLine>
+					<OriginalFileName condition="is">addinutil.exe</OriginalFileName>
+					<OriginalFileName condition="is">cmstp.exe</OriginalFileName>
+					<OriginalFileName condition="is">customshellhost.exe</OriginalFileName>
+					<OriginalFileName condition="is">extexport.exe</OriginalFileName>
+					<OriginalFileName condition="is">fltmc.exe</OriginalFileName>
+					<OriginalFileName condition="is">gpscript.exe</OriginalFileName>
+					<OriginalFileName condition="is">ie4uinit.exe</OriginalFileName>
+					<OriginalFileName condition="is">iediagcmd.exe</OriginalFileName>
+					<OriginalFileName condition="is">offlinescannershell.exe</OriginalFileName>
+					<OriginalFileName condition="is">pcwrun.exe</OriginalFileName>
+					<OriginalFileName condition="is">provlaunch.exe</OriginalFileName>
+					<OriginalFileName condition="is">regsvcs.exe</OriginalFileName>
+					<OriginalFileName condition="is">regsvr32.exe</OriginalFileName>
+					<OriginalFileName condition="is">runexehelper.exe</OriginalFileName>
+					<OriginalFileName condition="is">runonce.exe</OriginalFileName>
+					<OriginalFileName condition="is">SettingSyncHost.exe</OriginalFileName>
+					<OriginalFileName condition="is">Stordiag.exe</OriginalFileName>
+					<OriginalFileName condition="is">wmic.exe</OriginalFileName>
+					<OriginalFileName condition="is">workfolders.exe</OriginalFileName>
+					<OriginalFileName condition="is">wuauclt.exe</OriginalFileName>
+					<OriginalFileName condition="is">AccCheckConsole.exe</OriginalFileName>
+					<OriginalFileName condition="is">AgentExecutor.exe</OriginalFileName>
+					<OriginalFileName condition="is">bginfo.exe</OriginalFileName>
+					<OriginalFileName condition="is">coregen.exe</OriginalFileName>
+					<OriginalFileName condition="is">DefaultPack.exe</OriginalFileName>
+					<ParentImage condition="image">Mftrace.exe</ParentImage>
+					<ParentImage condition="image">Microsoft.NodejsTools.PressAnyKey.exe</ParentImage>
+					<OriginalFileName condition="is">msdeploy.exe</OriginalFileName>
+					<ParentImage condition="image">remote.exe</ParentImage>
+					<OriginalFileName condition="is">tracker.exe</OriginalFileName>
+					<OriginalFileName condition="is">vshadow.exe</OriginalFileName>
+				</Rule>
+				
+				<Rule name="Exfiltration" groupRelation="or"> <!-- 공격자가 유출에 주로 사용하는 프로세스 탐지 -->
+					<OriginalFileName condition="is">datasvcutil.exe</OriginalFileName>
+				</Rule>
+								
+				<Rule name="Event Log Deleted" groupRelation="and"> <!-- 공격자가 이벤트로그를 삭제하는 것을 탐지 -->
+					<OriginalFileName condition="is">wevtutil.exe</OriginalFileName>
+					<CommandLine condition="contains">cl</CommandLine>
+				</Rule>
+				
+				<Rule name="Account Created" groupRelation="and"> <!-- 계정이 생성되는 것을 탐지 -->
+					<OriginalFileName condition="is">net.exe</OriginalFileName>
+					<CommandLine condition="contains all">user;/add</CommandLine>
+				</Rule>
+				<Rule name="Account Password Changed" groupRelation="and"> <!-- 계정 비밀번호가 변경되는 것을 탐지 -->
+					<OriginalFileName condition="is">net.exe</OriginalFileName>
+					<CommandLine condition="contains all">user;*</CommandLine>
+				</Rule>
+				<Rule name="Group of Accounts Changed" groupRelation="and"> <!-- 계정의 그룹이 변경되는 것을 탐지 -->
+					<OriginalFileName condition="is">net.exe</OriginalFileName>
+					<CommandLine condition="contains all">localgroup;/add</CommandLine>
+				</Rule>
+				<Rule name="Account Deleted" groupRelation="and"> <!-- 계정이 삭제되는 것을 탐지 -->
+					<OriginalFileName condition="is">net.exe</OriginalFileName>
+					<CommandLine condition="contains all">user;/delete</CommandLine>
+				</Rule>
+				
+				<Rule name="Service Created" groupRelation="and"> <!-- 서비스가 생성되는 것을 탐지 -->
+					<OriginalFileName condition="is">sc.exe</OriginalFileName>
+					<CommandLine condition="contains">create</CommandLine>
+				</Rule>
+				<Rule name="Service Modified" groupRelation="and"> <!-- 서비스가 수정되는 것을 탐지 -->
+					<OriginalFileName condition="is">sc.exe</OriginalFileName>
+					<CommandLine condition="contains">config</CommandLine>
+				</Rule>
+				<Rule name="Service Deleted" groupRelation="and"> <!-- 서비스가 삭제되는 것을 탐지 -->
+					<OriginalFileName condition="is">sc.exe</OriginalFileName>
+					<CommandLine condition="contains">delete</CommandLine>
+				</Rule>
+				
+				<Rule name="Task Scheduler Created" groupRelation="and"> <!-- 작업 스케줄러가 생성되는 것을 탐지 -->
+					<OriginalFileName condition="is">schtasks.exe</OriginalFileName>
+					<CommandLine condition="contains">/Create</CommandLine>
+				</Rule>
+				<Rule name="Task Scheduler Modified" groupRelation="and"> <!-- 작업 스케줄러가 수정되는 것을 탐지 -->
+					<OriginalFileName condition="is">schtasks.exe</OriginalFileName>
+					<CommandLine condition="contains">/Change</CommandLine>
+				</Rule>
+				<Rule name="Task Scheduler Deleted" groupRelation="and"> <!-- 작업 스케줄러가 삭제되는 것을 탐지 -->
+					<OriginalFileName condition="is">schtasks.exe</OriginalFileName>
+					<CommandLine condition="contains">/Delete</CommandLine>
+				</Rule>
+				
+				<Rule name="Windows Defender Settings Changed" groupRelation="and"> <!-- Windows Defender 설정이 변경되는 것을 탐지 -->
+					<CommandLine condition="contains">Set-MpPreference</CommandLine>
+					<CommandLine condition="contains any">-DisableRealTimeMonitoring $true;-DisableBehaviorMonitoring $true;-DisableBlockAtFirstSeen $true;-DisableIOAVProtection $true;-DisablePrivacyMode $true;-SignatureDisableUpdateOnStartupWithoutEngine $true;-DisableArchiveScanning $true;-DisableIntrusionPreventionSystem $true;-DisableScriptScanning $true</CommandLine>
+				</Rule>
+				
+				<!-- Malicious Files Hashs -->
+				<Hashes condition="contains">SHA1=668C40BB6C792B3502B4EEFD0916FEBC8DBD5182</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=c0408da553d905857ac4f559b0438b99316f1bda</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=e007edd4688c5f94a714fee036590a11684d6a3a</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=232a0585a7cb6c54e15d5410c96aac5913038e7f</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=663a254350fbc379d8d7f69c50ead3117ee8b634</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=e9058a54013bf25215459e79761a3197ba7c5b28</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=882a66bb4626325f155f5f64dc4b4dcfc09c21db</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=f76b12b665b1488fdece1a09b2951c907eb79bbb</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=f88c1e28ec6bba5562426d82aee420e10b917bca</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=c822f6100333e84bd0ec87675ca79d65cb01a01e</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=a28d2aa07bd556ebd2cf055cde09779f8e0d7daa</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=f1ed52732206dc5a92a4a809e382180ba6f4687d</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=af19d707f32a795a4357c08c086dfbee15129127</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=9b6eef390a97c30fb8750abd0dfcf98ea37fd229</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=324ffc23115968fd40ae6407c81ca3e6c880ea39</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=0ab2343a2bd551690b858dc0ad2f2da668b68c69</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">IMPHASH=23867A89C2B8FC733BE6CF5EF902F2D1</Hashes> <!-- Potatos  -->
+				<Hashes condition="contains">IMPHASH=A37FF327F8D48E8A4D2F757E1B6E70BC</Hashes> <!-- Potatos  -->
+				<Hashes condition="contains">IMPHASH=F9A28C458284584A93B14216308D31BD</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">IMPHASH=6118619783FC175BC7EBECFF0769B46E</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">IMPHASH=959A83047E80AB68B368FDB3F4C6E4EA</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">IMPHASH=563233BFA169ACC7892451F71AD5850A</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">IMPHASH=87575CB7A0E0700EB37F2E3668671A08</Hashes> <!-- Potatos -->
+				<Hashes condition="contains">SHA1=e3b6ea8c46fa831cec6f235a5cf48b38a4ae8d69</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=caff376f77ef63bf9f3833468338afdf02640632</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=93ed68c7e5096d936115854954135d110648e739</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=bac13caa15dc7e86350fcfe6b65f7740431123b3</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=5bf8ee6e771b9945ce62dc5bf87129bb283f9004</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=d343b0019084de2dd882e92a79a872370bc6028f</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=24a8f406b6ca2827dd913c1f4c532bff01fccbb7</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=ebda940f182ffb7ee87dbf150bce569bce64bb8d</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=562f2e43b8299da983414b773758f3806408ff80</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=1c2fffd4514981b80fb304fc13d60365c2381c1a</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=d241df7b9d2ec0b8194751cd5ce153e27cc40fa4</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=250875212d58e1d4169b7e7d0cd236d1a19a4b9a</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=6cf86b87368641b063a3e0d6d18b7dd680ec9cfe</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=304f6e912bc152dd9c683a805d632158f5ce893a</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=26f8cb446d467c5f1675f6604f39c215ed4b6237</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=84698349f80858ef476f0ff36cef65c4ef9ff31e</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=94b5892a80d00be8f657b0bda7c7b4caa876ff31</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=d310637743534a8eaa162e3d0b4e61bead9623aa</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=210b24709f67953c1e2d266aa710f7d964d85529</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=b168b4f36666e9b5f8a4da53fb016f2ac6415548</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=45934d3e46267e957f3c69d273bd6e28eb5bf7bf</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=b695d5ca372e9c45804b39c8b59bc180911d14b1</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=6917337d92a078a3f624be0ffa8cd3d57f6e8551</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=8cba9ea725571860a7cf2e55b909211bfd743c1c</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=ee6cbc9b8c22ed1bebfe3c81c5922df0cd15a4b8</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=d1f7832035c3e8a73cc78afd28cfd7f4cece6d20</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=d40a48094c1f21fef892f27a8b6a7ed2bbf0c27f</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=8c2b77c32b334164532571d80284037a92556524</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=040fbf1325d51358606b710bc3bd774c04bdb308</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=df79bd0bfefc1db3289db14d9fbf61a5f730cca2</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=70df765f554ed7392200422c18776b8992c09231</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=4a45814547f237bbd96db61dec58c0e3fd5c7558</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=cb58316a65f7fe954adf864b678c694fadceb759</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=A3DAB5334B22760D4F1B1DB63AE85458064CF6D0</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=130587314D0C0B768024F5A591523BBD1C21B751</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=737D35FEFD02446FC238144D9A2B8C98922A0370</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=1BB24C24D5425400FB217B08438863338B89B714</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=5A71B65B4DB770185EA7425ABBF24C0B1AA7FA18</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=438265D26DE9E2BE7214A244E42BE4CFFE646B70</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=03AF176F4D8C878FBC43D9C5F00BA0153E4E9AAD</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=00486416B69E311C0C10276EF2EF29173B171803</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=0C106686A31BFE2BA931AE1CF6E9DBC6</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=0D1447D4B3259B3C2A1D4CFB7ECE13C3</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=1B0369A1E06271833F78FFA70FFB4EAF</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=4C1B52A19748428E51B14C278D0F58E3</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=4D927A711F77D62CEBD4F322CB57EC6F</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=66EE036DF5FC1004D9ED5E9A94A1086A</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=672B13F4A0B6F27D29065123FE882DFC</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=6BBD59CEA665C4AFCC2814C1327EC91F</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=725BB81DC24214F6ECACC0CFB36AD30D</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=9528A0E91E28FBB88AD433FEABCA2456</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=9DA6D5D77BE11712527DCAB86DF449A3</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=A6E01BC1AB89F8D91D9EAB72032AAE88</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=B24C5EDDAEA4FE50C6A96A2A133521E4</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=D21BBC50DCC169D7B4D0F01962793154</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">IMPHASH=FCC251CCEAE90D22C392215CC9A2D5D6</Hashes> <!-- Mimikatz -->
+				<Hashes condition="contains">SHA1=5ff6d9c77cdb0d16054bc815a2989348ebfa0477</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=131aaa994166ada77e8ed520bbd56e5908d68f06</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=f38f57cb3bcc28047f200d9fdd1fca400a9eafb1</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=e56196210132b7bd5016b6d53650f25db57fe330</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=a7cd106acbc7675337977f55387b92145190eb1c</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=6d390038003c298c7ab8f2cbe35a50b07e096554</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=a213d49916e194857affe97ad06ad8fe35a2ca03</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=e89564f142b0900357ea5be5dfa5ec12a21f91ea</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=95959e8970e1cfbdfc8e2cc2be77e949efd0739d</Hashes> <!-- NLBrute -->
+				<Hashes condition="contains">SHA1=6fa7e62cf9aa3264298ff58d75fa505cd5bf583e</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=629c9649ced38fd815124221b80c9d9c59a85e74</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=bd5354cd813130687c66ecc132d50770d48417cf</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=7aa1267b4c9a4f7a7a31266d6ca52b3df610c0f7</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=92f2a14fbb218a0aa1eaf237bff45c25e991fa0a</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=52b24a82171ac9397db213e38c61f10c50cddae6</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=efe8b9ff7ff93780c9162959a4c1e5ecf6e840a4</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=ee3196ba2a62cea7fc16a35db8b3334d6eb0ec2a</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=18c9be6b823d5e7474caaf4799b9d1f87ef6b51f</Hashes> <!-- Network Scaner -->
+				<Hashes condition="contains">SHA1=f2c34a69a718219727326ffaf485ac7e873f2a34</Hashes> <!-- CredentialsFileView -->	
+				<Hashes condition="contains">IMPHASH=BCCA3C247B619DCD13C8CDFF5F123932</Hashes> <!-- PetitPotam -->
+				<Hashes condition="contains">IMPHASH=3A19059BD7688CB88E70005F18EFC439</Hashes> <!-- PetitPotam -->
+				<Hashes condition="contains">IMPHASH=bf6223a49e45d99094406777eb6004ba</Hashes> <!-- PetitPotam -->
+				<Hashes condition="contains">IMPHASH=13F08707F759AF6003837A150A371BA1</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=1781F06048A7E58B323F0B9259BE798B</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=233F85F2D4BC9D6521A6CAAE11A1E7F5</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=24AF2584CBF4D60BBE5C6D1B31B3BE6D</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=632969DDF6DBF4E0F53424B75E4B91F2</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=713C29B396B907ED71A72482759ED757</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=749A7BB1F0B4C4455949C0B2BF7F9E9F</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=8628B2608957A6B0C6330AC3DE28CE2E</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=8B114550386E31895DFAB371E741123D</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=94CB940A1A6B65BED4D5A8F849CE9793</Hashes> <!-- PwDumpX -->
+				<Hashes condition="contains">IMPHASH=9D68781980370E00E0BD939EE5E6C141</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=B18A1401FF8F444056D29450FBC0A6CE</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=CB567F9498452721D77A451374955F5F</Hashes> <!-- Pwdump -->
+				<Hashes condition="contains">IMPHASH=730073214094CD328547BF1F72289752</Hashes> <!-- Htran -->
+				<Hashes condition="contains">IMPHASH=17B461A082950FC6332228572138B80C</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">IMPHASH=DC25EE78E2EF4D36FAA0BADF1E7461C9</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">IMPHASH=819B19D53CA6736448F9325A85736792</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">IMPHASH=829DA329CE140D873B4A8BDE2CBFAA7E</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=f4698d0790940fd3cd613502baac752b0772df20</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=58bde687a2af97bcc827f4b8ceb724fffabe5e95</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=0e21a0a54aedf5f4a4693071bd9b7f66c4234621</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=eeee9c6fbd737d0e536d18b9f07e3db4be81cd51</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=aca84353507f5c4f388351c6e07da49f2b3f00c5</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=1912badf58cac78d9094a4decff538278edf885b</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=ae898df247d09042fa8cd41f58a78fecc101fb96</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=8dd150b6174b11d2fd09bda7958320ab02a2fb61</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">SHA1=f463a0aa3cc5f961ba780125d3f2f2c9460a1b3c</Hashes> <!-- Cobalt Strike -->
+				<Hashes condition="contains">IMPHASH=C547F2E66061A8DFFB6F5A3FF63C0A74</Hashes> <!-- PPLDump -->
+				<Hashes condition="contains">IMPHASH=0588081AB0E63BA785938467E1B10CCA</Hashes> <!-- PPLDump -->
+				<Hashes condition="contains">IMPHASH=0D9EC08BAC6C07D9987DFD0F1506587C</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=BC129092B71C89B4D4C8CDF8EA590B29</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=4DA924CF622D039D58BCE71CDF05D242</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=E7A3A5C377E2D29324093377D7DB1C66</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=9A9DBEC5C62F0380B4FA5FD31DEFFEDF</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=AF8A3976AD71E5D5FDFB67DDB8DADFCE</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=0C477898BBF137BBD6F2A54E3B805FF4</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=0CA9F02B537BCEA20D4EA5EB1A9FE338</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=3AB3655E5A14D4EEFC547F4781BF7F9E</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=E6F9D5152DA699934B30DAAB206471F6</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=3AD59991CCF1D67339B319B15A41B35D</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=FFDD59E0318B85A3E480874D9796D872</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=0CF479628D7CC1EA25EC7998A92F5051</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=07A2D4DCBD6CB2C6A45E6B101F0B6D51</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=D6D0F80386E1380D05CB78E871BC72B1</Hashes> <!-- NanoDump -->
+				<Hashes condition="contains">IMPHASH=38D9E015591BBFD4929E0D0F47FA0055</Hashes> <!-- HandleKatz -->
+				<Hashes condition="contains">IMPHASH=0E2216679CA6E1094D63322E3412D650</Hashes> <!-- HandleKatz -->
+				<Hashes condition="contains">IMPHASH=ADA161BF41B8E5E9132858CB54CAB5FB</Hashes> <!-- DripLoader -->
+				<Hashes condition="contains">IMPHASH=2A1BC4913CD5ECB0434DF07CB675B798</Hashes> <!-- DripLoader -->
+				<Hashes condition="contains">IMPHASH=11083E75553BAAE21DC89CE8F9A195E4</Hashes> <!-- DripLoader -->
+				<Hashes condition="contains">IMPHASH=A23D29C9E566F2FA8FFBB79267F5DF80</Hashes> <!-- DripLoader -->
+				<Hashes condition="contains">IMPHASH=4A07F944A83E8A7C2525EFA35DD30E2F</Hashes> <!-- CreateMiniDump -->
+				<Hashes condition="contains">IMPHASH=767637C23BB42CD5D7397CF58B0BE688</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=14C4E4C72BA075E9069EE67F39188AD8</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=3C782813D4AFCE07BBFC5A9772ACDBDC</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=7D010C6BB6A3726F327F7E239166D127</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=89159BA4DD04E4CE5559F132A9964EB3</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=6F33F4A5FC42B8CEC7314947BD13F30F</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=5834ED4291BDEB928270428EBBAF7604</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=5A8A8A43F25485E7EE1B201EDCBC7A38</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=DC7D30B90B2D8ABF664FBED2B1B59894</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=41923EA1F824FE63EA5BEB84DB7A3E74</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=3DE09703C8E79ED2CA3F01074719906B</Hashes> <!-- UACMe Akagi -->
+				<Hashes condition="contains">IMPHASH=A53A02B997935FD8EEDCB5F7ABAB9B9F</Hashes> <!-- WCE -->
+				<Hashes condition="contains">IMPHASH=E96A73C7BF33A464C510EDE582318BF2</Hashes> <!-- WCE -->
+				<Hashes condition="contains">IMPHASH=32089B8851BBF8BC2D014E9F37288C83</Hashes> <!-- Sliver Stagers -->
+				<Hashes condition="contains">IMPHASH=09D278F9DE118EF09163C6140255C690</Hashes> <!-- Dumpert -->
+				<Hashes condition="contains">IMPHASH=03866661686829d806989e2fc5a72606</Hashes> <!-- Dumpert -->
+				<Hashes condition="contains">IMPHASH=e57401fbdadcd4571ff385ab82bd5d6d</Hashes> <!-- Dumpert -->
+				<Hashes condition="contains">IMPHASH=84B763C45C0E4A3E7CA5548C710DB4EE</Hashes> <!-- SysmonEnte -->
+				<Hashes condition="contains">IMPHASH=19584675D94829987952432E018D5056</Hashes> <!-- SysmonQuiet -->
+				<Hashes condition="contains">IMPHASH=330768A4F172E10ACB6287B87289D83B</Hashes> <!-- ShaprEvtMute Hook -->
+				<Hashes condition="contains">IMPHASH=885C99CCFBE77D1CBFCB9C4E7C1A3313</Hashes> <!-- Forkatz -->
+				<Hashes condition="contains">IMPHASH=22A22BC9E4E0D2F189F1EA01748816AC</Hashes> <!-- PPLKiller -->
+				<Hashes condition="contains">IMPHASH=7FA30E6BB7E8E8A69155636E50BF1B28</Hashes> <!-- PPLKiller -->
+				<Hashes condition="contains">IMPHASH=96DF3A3731912449521F6F8D183279B1</Hashes> <!-- Backstab -->
+				<Hashes condition="contains">IMPHASH=7E6CF3FF4576581271AC8A313B2AAB46</Hashes> <!-- Backstab -->
+				<Hashes condition="contains">IMPHASH=51791678F351C03A0EB4E2A7B05C6E17</Hashes> <!-- Backstab -->
+				<Hashes condition="contains">SHA1=4e18320493042bcd7d21b53e258974bc460acc78</Hashes> <!-- ShaprEvtMute -->
+				<Hashes condition="contains">SHA1=c182f85d6315170d605cd87c11a6eb1404dd5fe3</Hashes> <!-- Socks.exe -->
+				<Hashes condition="contains">SHA1=35e56be708429e730c8c8165581eb168ea46e0f5</Hashes> <!-- Socks2.exe -->
+				<Hashes condition="contains">SHA1=b0b063768ccdd5fead2052624d57454501ff7639</Hashes> <!-- winscp -->
+				<Hashes condition="contains">SHA1=c953d525c2d0bdf321ec98ab1a8cf69c2425102c</Hashes> <!-- ProcessHacker -->
+				<Hashes condition="contains">SHA1=fb0a150601470195c47b4e8d87fcb3f50292beb2</Hashes> <!-- psexec64.exe -->
+				<Hashes condition="contains">SHA1=f5df10a3d5b3d0b511f8645d1c24260c449ef7b7</Hashes> <!-- file64.exe -->
+				<Hashes condition="contains">SHA1=22a3eabf1f54476915448019ffff20aa74a2a2cd</Hashes> <!-- Backstab.exe -->
+				<Hashes condition="contains">SHA1=2cb6ff75b38a3f24f3b60a2742b6f4d6027f0f2a</Hashes> <!-- ADfind -->
+				<Hashes condition="contains">SHA1=629c9649ced38fd815124221b80c9d9c59a85e74</Hashes> <!-- NetworkShare_pre2.exe -->
+				<Hashes condition="contains">SHA1=24c13d46de755cb22f904b3d601bc47ec8e4b53e</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=58964b055faf9b7f72d1725786f8112f56c187bd</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=c0e6d59e99e4adb58a2f57abf0deba61dee55c2f</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=271b90824c7bb1de98c7fa9dae6dcd59d8a0bd64</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=870ccd59ad2d3808c014c7c1dcc8a54de375db0c</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=d7d472bfc62bd6f52e3b4b3c7e88b92b664dd142</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=d1ddbe96ef37c38b4d92bcba3d02bbb2e921ffdc</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=4dade34d55256981a446525bc98faa1abdc25118</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=e3f8e063ba0002bdcb4bb32bc3cbb61b77d3fd93</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=a291e595bd163873d0ed8e75dd7aa331f040258d</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=93acd978da4a602c9ea1a23b6a97d74ced436e56</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=60e88aac9214542c1c522e524d5b2e64565f7fc9</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=b88216b5a8d820a534f97c786f586e8aede6c54d</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=f38a99dd894548bfea867d3b347e406ef0f3584c</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=30df0c11336919715461051c498611e316cc65f6</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=6f9fe32baaa288942557292680a39b4060214b9d</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=2a3d9e378afd607df314a74b43b717a5bc620fbd</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=f3c14e25584475f01f417e3ec45474aa8de4400d</Hashes> <!-- Ransomeware -->
+				<Hashes condition="contains">SHA1=598114cd649f81ea19019013a1367075458ce1d5</Hashes> <!-- BruteForce -->
+				<Hashes condition="contains">SHA1=11ffeabbe42159e1365aa82463d8690c845ce7b7</Hashes> <!-- Remote Tools -->
+				<Hashes condition="contains">SHA1=d5188711a4f91e70661919328ce8e4a4efb2e7b9</Hashes> <!-- X-PopUp.exe -->
+				<Hashes condition="contains">SHA1=9738b20fc997c4d59afee71ce1d5ba190fa6c7a2</Hashes> <!-- X-PopUp.exe -->
+				<Hashes condition="contains">SHA1=83ae5a227471b4c3fa449e5a45a5189c55990936</Hashes> <!-- X-PopUp.exe -->
+				<Hashes condition="contains">SHA1=69c018492a1d3d9578a838c9e8fa65bd8e361951</Hashes> <!-- X-PopUp.exe -->
+				<Hashes condition="contains">SHA1=3b5c689089e4dcbd3fd0e99b1b2f2817576017c6</Hashes> <!-- X-PopUp.exe -->
+				<Hashes condition="contains">SHA1=620a4ef784f6bbc8c9fd08c7590b691de546049f</Hashes> <!-- ShellBot -->
+				<Hashes condition="contains">SHA1=a10262346ce669b28914570415a223ec09c234c8</Hashes> <!-- ShellBot -->
+				<Hashes condition="contains">SHA1=5daf348ae3ca2c13ff7983c5771e9436ca540695</Hashes> <!-- ShellBot -->
+				<Hashes condition="contains">SHA1=94d6fa138b9b597e6c1b543ab1db5d1c8f18daac</Hashes> <!-- HiddenGh0st -->
+				<Hashes condition="contains">SHA1=a5f3a2b96a5e7196f0805f0418098cb7c80a25a4</Hashes> <!-- BlueShell -->
+				<Hashes condition="contains">SHA1=9258fbaa2575724994fe211c650b3f4014ae5fc8</Hashes> <!-- BlueShell -->
+				<Hashes condition="contains">SHA1=6D100D49EBA5644CBEF1DA6E0BF8C848653F99F0</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=C69670DA93CEC09A680676B2FA8B96A3D1F62A0B</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=6F63ACB536E8192B9C20F97515706D0B5E018027</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=D1583C6058D66F6A16756A6DE4C71D62D7898597</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=780F5F9ED3122D49F1177BD462B919E7011613E8</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=17848E2AF14FBCD0BCB384D0A1C4F53A72760EC5</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=249439ECD8B379356C6C19390646F9070483B773</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=F459D92DBC2E442D405DE758BDA9213AE213673B</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=F8B9989A15946316F988A8910B0DAC90C31F2440</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=5415F639900D30B9503B3F731A6151DB7BAA37C6</Hashes> <!-- BloodHound -->
+				<Hashes condition="contains">SHA1=B2A97CC59FF8C5D6E96ACF8B9F89F36F5A299722</Hashes> <!-- SharpHound -->
+				<Hashes condition="contains">SHA1=48ACC122615802B00C3AAFDCC753BC531028B9DF</Hashes> <!-- SharpHound -->
+				<Hashes condition="contains">SHA1=5E6254EBCF8EA518716C6090658B89960F425AB3</Hashes> <!-- SharpHound -->
+				<Hashes condition="contains">SHA1=2D4F748461914D59A69ACAE46BEDB11C8899E546</Hashes> <!-- SharpHound -->
+				<Hashes condition="contains">SHA1=286588A50B9B128D07AA0F8851F2D7EE91DFA372</Hashes> <!-- SharpHound -->
+				<Hashes condition="contains">SHA1=B926E985FBBC785975981F123FE63F53F7BB895F</Hashes> <!-- SharpHound -->
+				<Hashes condition="contains">SHA1=DD4230DD6E4B88C721554861A93FA725B99545E6</Hashes> <!-- SharpHound -->
+				<Hashes condition="contains">SHA1=FFDEE46E7B9E9FD4D53391B303FF1B15DB271E7B</Hashes> <!-- metasploit -->
+				<Hashes condition="contains">SHA1=BE5740F493CD427D4B8EA0A3CA98E98995B985CE</Hashes> <!-- metasploit -->
+				<Hashes condition="contains">SHA1=ED25D1AF9DEB13D071C44EF16AF5906F6AFF06B0</Hashes> <!-- metasploit -->
+				<Hashes condition="contains">SHA1=76FF28DA5304911170C6B0DCD90DC8CDC550E9E8</Hashes> <!-- metasploit -->
+			</ProcessCreate>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<ProcessCreate onmatch="exclude">
+				<!-- Microsoft Windows -->
+				<CommandLine condition="begin with">C:\Windows\system32\wermgr.exe -queuereporting_svc</CommandLine> <!--Windows:Windows error reporting/telemetry-->
+				<CommandLine condition="begin with">C:\Windows\system32\DllHost.exe /Processid</CommandLine> <!--Windows-->
+				<CommandLine condition="begin with">C:\Windows\system32\wbem\wmiprvse.exe -Embedding</CommandLine> <!--Windows: WMI provider host-->
+				<CommandLine condition="begin with">C:\Windows\system32\wbem\wmiprvse.exe -secured -Embedding</CommandLine> <!--Windows: WMI provider host-->
+				<CommandLine condition="is">C:\Windows\system32\wermgr.exe -upload</CommandLine> <!--Windows:Windows error reporting/telemetry-->
+				<CommandLine condition="is">C:\Windows\system32\SearchIndexer.exe /Embedding</CommandLine> <!--Windows: Search Indexer-->
+				<CommandLine condition="is">C:\windows\system32\wermgr.exe -queuereporting</CommandLine> <!--Windows:Windows error reporting/telemetry-->
+				<CommandLine condition="is">\??\C:\Windows\system32\autochk.exe *</CommandLine> <!--Microsoft:Bootup: Auto Check Utility-->
+				<CommandLine condition="is">\SystemRoot\system32\smss.exe</CommandLine> <!--Microsoft:Bootup: Windows Session Manager-->
+				<CommandLine condition="is">C:\Windows\system32\RuntimeBroker.exe -Embedding</CommandLine> <!--Windows:Apps permissions-->
+				<Image condition="is">C:\Program Files (x86)\Common Files\microsoft shared\ink\TabTip32.exe</Image> <!--Windows: Touch Keyboard and Handwriting Panel Helper-->
+				<Image condition="is">C:\Windows\system32\TokenBrokerCookies.exe</Image> <!--Windows: SSO sign-in assistant for MicrosoftOnline.com-->
+				<Image condition="is">C:\Windows\system32\plasrv.exe</Image> <!--Windows: Performance Logs and Alerts DCOM Server-->
+				<Image condition="is">C:\Windows\system32\wifitask.exe</Image> <!--Windows: Wireless Background Task-->
+				<Image condition="is">C:\Windows\system32\CompatTelRunner.exe</Image> <!--Windows: Customer Experience Improvement-->
+				<Image condition="is">C:\Windows\system32\PrintIsolationHost.exe</Image> <!--Windows: Printing-->
+				<Image condition="is">C:\Windows\system32\SppExtComObj.Exe</Image> <!--Windows: KMS activation-->
+				<Image condition="is">C:\Windows\system32\audiodg.exe</Image> <!--Windows: Launched constantly-->
+				<Image condition="is">C:\Windows\system32\conhost.exe</Image> <!--Windows: Command line interface host process-->
+				<Image condition="is">C:\Windows\system32\mobsync.exe</Image> <!--Windows: Network file syncing-->
+				<Image condition="is">C:\Windows\system32\musNotification.exe</Image> <!--Windows: Update pop-ups-->
+				<Image condition="is">C:\Windows\system32\musNotificationUx.exe</Image> <!--Windows: Update pop-ups-->
+				<Image condition="is">C:\Windows\system32\powercfg.exe</Image> <!--Microsoft:Power configuration management-->
+				<Image condition="is">C:\Windows\system32\sndVol.exe</Image> <!--Windows: Volume control-->
+				<Image condition="is">C:\Windows\system32\sppsvc.exe</Image> <!--Windows: Software Protection Service-->
+				<Image condition="is">C:\Windows\system32\wbem\WmiApSrv.exe</Image> <!--Windows: WMI performance adapter host process-->
+				<IntegrityLevel condition="is">AppContainer</IntegrityLevel> <!--Windows: Don't care about sandboxed processes right now. Will need to revisit this decision.-->
+				<ParentCommandLine condition="begin with">%%SystemRoot%%\system32\csrss.exe ObjectDirectory=\Windows</ParentCommandLine> <!--Windows:CommandShell: Triggered when programs use the command shell, but doesn't provide attribution for what caused it-->
+				<ParentCommandLine condition="is">C:\windows\system32\wermgr.exe -queuereporting</ParentCommandLine> <!--Windows:Windows error reporting/telemetry-->
+				<CommandLine condition="is">C:\WINDOWS\system32\devicecensus.exe UserCxt</CommandLine>
+				<CommandLine condition="is">C:\Windows\System32\usocoreworker.exe -Embedding</CommandLine>
+				<ParentImage condition="is">C:\Windows\system32\SearchIndexer.exe</ParentImage> <!--Windows:Search: Launches many uninteresting sub-processes-->
+				<!-- Windows:svchost -->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k appmodel -s StateRepository</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k appmodel -p -s camsvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k appmodel</CommandLine> <!--Windows 10-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k appmodel -p -s tiledatamodelsvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k camera -s FrameServer</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k dcomlaunch -s LSM</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k dcomlaunch -s PlugPlay</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k defragsvc</CommandLine> <!--Windows defragmentation-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k devicesflow -s DevicesFlowUserSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k imgsvc</CommandLine> <!--Microsoft:The Windows Image Acquisition Service-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localService -s EventSystem</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localService -s bthserv</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k LocalService -p -s BthAvctpSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localService -s nsi</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localService -s w32Time</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceAndNoImpersonation</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceAndNoImpersonation -p</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceNetworkRestricted -s Dhcp</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceNetworkRestricted -s EventLog</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceNetworkRestricted -s TimeBrokerSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceNetworkRestricted -s WFDSConMgrSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k LocalServiceNetworkRestricted -s BTAGService</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k LocalSystemNetworkRestricted -p -s NcbService</CommandLine> <!--Win10:1903:Network Connection Broker-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceNetworkRestricted</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceAndNoImpersonation -s SensrSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceAndNoImpersonation -p -s SSDPSRV</CommandLine> <!--Windows:SSDP-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceNoNetwork</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -p -s WPDBusEnum</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -p -s fhsvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -s DeviceAssociationService</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -s NcbService</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -s SensorService</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -s TabletInputService</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -s UmRdpService</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -s WPDBusEnum</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -p -s NgcSvc</CommandLine> <!--Microsoft:Passport-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceNetworkRestricted -p -s NgcCtnrSvc</CommandLine> <!--Microsoft:Passport Container-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localServiceAndNoImpersonation -s SCardSvr</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -p -s wuauserv</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -p -s SessionEnv</CommandLine> <!--Windows:Remote desktop configuration-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -s WdiSystemHost</CommandLine> <!--Windows: Diagnostic System Host-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted -p -s WdiSystemHost</CommandLine> <!--Windows: Diagnostic System Host-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted</CommandLine> <!--Windows-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -p -s wlidsvc</CommandLine> <!--Windows: Windows Live Sign-In Assistant-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -p -s ncaSvc</CommandLine> <!--Windows: Network Connectivity Assistant-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s BDESVC</CommandLine> <!--Windows:Network: BitLocker Drive Encryption-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -p -s BDESVC</CommandLine> <!--Microsoft:Win10:1903:Network: BitLocker Drive Encryption-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -p -s BITS</CommandLine> <!--Windows:Network: Background Intelligent File Transfer (BITS) -->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s BITS</CommandLine> <!--Windows:Network: Background Intelligent File Transfer (BITS) -->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s CertPropSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s DsmSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -p -s Appinfo</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s Gpsvc</CommandLine> <!--Windows:Network: Group Policy -->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s ProfSvc</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s SENS</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s SessionEnv</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s Themes</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs -s Winmgmt</CommandLine> <!--Windows: Windows Management Instrumentation (WMI) -->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkService -p -s DoSvc</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkService -s Dnscache</CommandLine> <!--Windows:Network: DNS caching, other uses -->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkService -s LanmanWorkstation</CommandLine> <!--Windows:Network: "Workstation" service, used for SMB file-sharing connections and RDP-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkService -s NlaSvc</CommandLine> <!--Windows:Network: Network Location Awareness-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkService -s TermService</CommandLine> <!--Windows:Network: Terminal Services (RDP)-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkService</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkService -p</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k networkServiceNetworkRestricted</CommandLine> <!--Windows: Network services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k rPCSS</CommandLine> <!--Windows Services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k secsvcs</CommandLine>
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k swprv</CommandLine> <!--Microsoft:Software Shadow Copy Provider-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k unistackSvcGroup</CommandLine> <!--Windows 10-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k utcsvc</CommandLine> <!--Windows Services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k wbioSvcGroup</CommandLine> <!--Windows Services-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k werSvcGroup</CommandLine> <!--Windows: ErrorReporting-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k wusvcs -p -s WaaSMedicSvc</CommandLine> <!--Windows: Update Medic Service-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k wsappx -p -s ClipSVC</CommandLine> <!--Windows:Apps: Client License Service-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k wsappx -p -s AppXSvc</CommandLine> <!--Windows:Apps: AppX Deployment Service-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k wsappx -s ClipSVC</CommandLine> <!--Windows:Apps: Client License Service-->
+				<CommandLine condition="is">C:\Windows\system32\svchost.exe -k wsappx</CommandLine> <!--Windows:Apps-->
+				<CommandLine condition="is">"C:\WINDOWS\system32\mmc.exe" "C:\WINDOWS\system32\eventvwr.msc" /s</CommandLine>
+				<ParentCommandLine condition="is">C:\Windows\system32\svchost.exe -k netsvcs</ParentCommandLine> <!--Windows: Network services: Spawns Consent.exe-->
+				<ParentCommandLine condition="is">C:\Windows\system32\svchost.exe -k localSystemNetworkRestricted</ParentCommandLine> <!--Windows-->
+				<ParentCommandLine condition="is">C:\Windows\system32\svchost.exe -k DcomLaunch -p</ParentCommandLine>
+				<CommandLine condition="is">C:\Windows\system32\deviceenroller.exe /c /AutoEnrollMDM</CommandLine> <!--Windows: AzureAD device enrollment agent-->
+				<!-- Microsoft:Edge -->
+				<CommandLine condition="begin with">"C:\Program Files (x86)\Microsoft\Edge Dev\Application\msedge.exe" --type=</CommandLine>
+				<!-- Microsoft:dotNet -->
+				<CommandLine condition="begin with">C:\Windows\Microsoft.NET\Framework\v4.0.30319\ngen.exe</CommandLine> <!--Microsoft:DotNet-->
+				<CommandLine condition="begin with">C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\Ngen.exe</CommandLine> <!--Microsoft:DotNet-->
+				<CommandLine condition="begin with">C:\Windows\Microsoft.NET\Framework\v4.0.30319\ngentask.exe</CommandLine> <!--Microsoft:DotNet-->
+				<CommandLine condition="begin with">C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\ngentask.exe</CommandLine> <!--Microsoft:DotNet-->
+				<Image condition="is">C:\Windows\Microsoft.NET\Framework64\v4.0.30319\mscorsvw.exe</Image> <!--Microsoft:DotNet-->
+				<Image condition="is">C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorsvw.exe</Image> <!--Microsoft:DotNet-->
+				<Image condition="is">C:\Windows\Microsoft.Net\Framework64\v3.0\WPF\PresentationFontCache.exe</Image> <!--Windows: Font cache service-->
+				<ParentCommandLine condition="begin with">C:\Windows\Microsoft.NET\Framework64\v4.0.30319\ngentask.exe</ParentCommandLine>
+				<ParentImage condition="is">C:\Windows\Microsoft.NET\Framework64\v4.0.30319\mscorsvw.exe</ParentImage> <!--Microsoft:DotNet-->
+				<ParentImage condition="is">C:\Windows\Microsoft.NET\Framework64\v4.0.30319\ngentask.exe</ParentImage> <!--Microsoft:DotNet-->
+				<ParentImage condition="is">C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorsvw.exe</ParentImage> <!--Microsoft:DotNet-->
+				<ParentImage condition="is">C:\Windows\Microsoft.NET\Framework\v4.0.30319\ngentask.exe</ParentImage> <!--Microsoft:DotNet: Spawns thousands of ngen.exe processes-->
+				<!-- Microsoft:Office -->
+				<Image condition="is">C:\Program Files\Microsoft Office\Office16\MSOSYNC.EXE</Image> <!--Microsoft:Office: Background process for SharePoint/Office365 connectivity-->
+				<Image condition="is">C:\Program Files (x86)\Microsoft Office\Office16\MSOSYNC.EXE</Image> <!--Microsoft:Office: Background process for SharePoint/Office365 connectivity-->
+				<Image condition="is">C:\Program Files\Common Files\Microsoft Shared\OfficeSoftwareProtectionPlatform\OSPPSVC.EXE</Image> <!--Microsoft:Office: Licensing service-->
+				<Image condition="is">C:\Program Files\Microsoft Office\Office16\msoia.exe</Image> <!--Microsoft:Office: Telemetry collector-->
+				<Image condition="is">C:\Program Files (x86)\Microsoft Office\root\Office16\officebackgroundtaskhandler.exe</Image>
+				<!-- Microsoft:Office:Click2Run -->
+				<Image condition="is">C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe</Image> <!--Microsoft:Office: Background process-->
+				<ParentImage condition="is">C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeClickToRun.exe</ParentImage> <!--Microsoft:Office: Background process-->
+				<ParentImage condition="is">C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe</ParentImage> <!--Microsoft:Office: Background process-->
+				<!-- Windows: Media player -->
+				<Image condition="is">C:\Program Files\Windows Media Player\wmpnscfg.exe</Image> <!--Windows: Windows Media Player Network Sharing Service Configuration Application-->
+				<!-- Google -->
+				<CommandLine condition="begin with">"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --type=</CommandLine> <!--Google:Chrome: massive command-line arguments-->
+				<CommandLine condition="begin with">"C:\Program Files\Google\Chrome\Application\chrome.exe" --type=</CommandLine> <!--Google:Chrome: massive command-line arguments-->
+				
+				<Rule groupRelation="and">
+					<Image condition="end with">AcroRd32.exe</Image>
+					<CommandLine condition="contains any">/CR;channel=</CommandLine>
+				</Rule>
+				<Image condition="begin with">C:\Program Files\NVIDIA Corporation\</Image>
+				<Image condition="begin with">C:\Program Files\Realtek\</Image>
+				
+				<Image condition="contains all">C:\Users\;AppData\Local\JandiApp\;JandiApp.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\Notion\Notion.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\signal-desktop\Signal.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\slack\;slack.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Discord\;Discord.exe</Image>
+			</ProcessCreate>
+		</RuleGroup>
+		
+		<!-- Event ID 2. File creation time changed -->
+		<!-- 설명: File creation time changed 이벤트는 파일 생성 시간이 수정될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<FileCreateTime onmatch="include">
+				<Image condition="begin with">C:\Temp\</Image> <!-- C:\Temp 하위 경로에서 발생되는 생성시간 수정을 탐지 -->
+				<Image condition="begin with">C:\Windows\Temp\</Image> <!-- C:\Windows\Temp 하위 경로에서 발생되는 생성시간 수정을 탐지 -->
+				<Image condition="begin with">C:\Users\</Image> <!-- C:\Users 하위 경로에서 발생되는 생성시간 수정을 탐지 -->
+				<TargetFilename condition="end with">.exe</TargetFilename> <!-- .exe 확장자에 대한 생성시간 수정을 탐지 -->
+			</FileCreateTime>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<FileCreateTime onmatch="exclude">
+				<Image condition="image">OneDrive.exe</Image>
+				<Image condition="contains">setup</Image>
+				<Image condition="contains">install</Image>
+				<Image condition="contains">Update\</Image>
+				<Image condition="is">C:\Windows\uus\packages\preview\AMD64\wuaucltcore.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\JandiApp\;JandiApp.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\Notion\Notion.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\signal-desktop\Signal.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\slack\;slack.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Discord\;Discord.exe</Image>
+			</FileCreateTime>
+		</RuleGroup>
+		
+		<!-- Event ID 3. Network connection detected -->
+		<!-- 설명: Network connection detected 이벤트는 시스템의 네트워크 연결이 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<NetworkConnect onmatch="include">
+				<!-- Ports Detected -->
+				<DestinationPort name="SSH" condition="is">22</DestinationPort> <!-- SSH 연결을 탐지 -->
+				<DestinationPort name="Telnet" condition="is">23</DestinationPort> <!-- Telnet 연결을 탐지 -->
+				<DestinationPort name="SMTP" condition="is">25</DestinationPort> <!-- SMTP 연결을 탐지 -->
+				<DestinationPort name="IMAP" condition="is">143</DestinationPort> <!-- IMAP 연결을 탐지 -->
+				<DestinationPort name="SMB" condition="is">445</DestinationPort> <!-- SMB 연결을 탐지 -->
+				<DestinationPort name="RDP" condition="is">3389</DestinationPort> <!-- RDP 연결을 탐지 -->
+				<DestinationPort name="VNC" condition="is">5800</DestinationPort> <!-- VNC 연결을 탐지 -->
+				<DestinationPort name="VNC" condition="is">5900</DestinationPort> <!-- VNC 연결을 탐지 -->
+				<DestinationPort name="Proxy" condition="is">1080</DestinationPort> <!-- Proxy 연결을 탐지 -->
+				<DestinationPort name="Proxy" condition="is">3128</DestinationPort> <!-- Proxy 연결을 탐지 -->
+				<DestinationPort name="Proxy" condition="is">8080</DestinationPort> <!-- Proxy 연결을 탐지 -->
+				<DestinationPort name="Tor" condition="is">1723</DestinationPort> <!-- Tor 연결을 탐지 -->
+				<DestinationPort name="Tor" condition="is">9001</DestinationPort> <!-- Tor 연결을 탐지 -->
+				<DestinationPort name="Tor" condition="is">9030</DestinationPort> <!-- Tor 연결을 탐지 -->
+				
+				<Image condition="begin with">C:\Users</Image>
+				<Image condition="begin with">C:\ProgramData</Image>
+				<Image condition="begin with">C:\Windows\Temp</Image>
+				<Image condition="begin with">C:\perflogs</Image>
+				<Image condition="begin with">C:\intel</Image>
+				<Image condition="begin with">C:\Windows\fonts</Image>
+				<Image condition="begin with">C:\Windows\system32\config</Image>
+				
+				<Rule name="Discovery" groupRelation="or"> <!-- 공격자가 시스템을 탐색하는데 주로 사용하는 프로세스 탐지 -->
+					<Image condition="image">ipconfig.exe</Image>
+					<Image condition="image">nbtstat.exe</Image>
+					<Image condition="image">nslookup.exe</Image>
+					<Image condition="image">net.exe</Image>
+					<Image condition="image">nltest.exe</Image>
+					<Image condition="image">quser.exe</Image>
+					<Image condition="image">netcat.exe</Image>
+					<Image condition="image">qprocess.exe</Image>
+					<Image condition="image">tasklist.exe</Image>
+				</Rule>
+				
+				<Image condition="image">psexec.exe</Image>
+				<Image condition="image">cmd.exe</Image>
+				<Image condition="image">at.exe</Image>
+				<Image condition="image">sc.exe</Image>
+				<Image condition="image">nc.exe</Image>
+				<Image condition="image">ncat.exe</Image>
+				
+				<Rule name="Download to PowerShell" groupRelation="and"> <!-- PowerShell System.Net.WebClient 클래스를 이용한 다운로드 탐지 -->
+					<Image condition="image">powershell.exe</Image>
+					<DestinationPort condition="is">80</DestinationPort>
+				</Rule>
+			</NetworkConnect>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<NetworkConnect onmatch="exclude">
+				<DestinationIp condition="is">127.0.0.1</DestinationIp>
+				<DestinationIp condition="begin with">fe80:0:0:0</DestinationIp>
+				<Image condition="image">OneDrive.exe</Image>
+				<Image condition="image">OneDriveStandaloneUpdater.exe</Image>
+				<Image condition="begin with">C:\ProgramData\Microsoft\Windows Defender\Platform\</Image>
+				<Image condition="end with">AppData\Local\Microsoft\Teams\current\Teams.exe</Image>
+				<DestinationHostname condition="is">microsoft.com</DestinationHostname>
+				<DestinationHostname condition="end with">.microsoft.com</DestinationHostname>
+				<Image condition="contains all">C:\Users\;AppData\Local\JandiApp\;JandiApp.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\Notion\Notion.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\signal-desktop\Signal.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\slack\;slack.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Discord\;Discord.exe</Image>
+			</NetworkConnect>
+		</RuleGroup>
+		
+		<!-- Event ID 5. Process terminated -->
+		<!-- 설명: Process terminated 이벤트는 프로세스가 종료될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<ProcessTerminate onmatch="include">
+				<Image condition="begin with">C:\PerfLogs\</Image> <!-- 공격자가 주로 활용하는 시스템 경로에서 종료된 프로세스 탐지 -->
+				<Image condition="begin with">C:\Users\Default\</Image>
+				<Image condition="begin with">C:\Windows\Fonts\</Image>
+				<Image condition="begin with">C:\Windows\Debug\</Image>
+				<Image condition="begin with">C:\Windows\Media\</Image>
+				<Image condition="contains">\Temp\</Image>
+				<Image condition="contains">\Downloads\</Image>
+				<Image condition="contains">\Desktop\</Image>
+			</ProcessTerminate>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<ProcessTerminate onmatch="exclude">
+				<Image condition="contains all">C:\Users\;AppData\Local\JandiApp\;JandiApp.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\Notion\Notion.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Programs\signal-desktop\Signal.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\slack\;slack.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\Discord\;Discord.exe</Image>
+			</ProcessTerminate>
+		</RuleGroup>
+		
+		<!-- Event ID 6. Driver loaded -->
+		<!-- 설명: Driver loaded 이벤트는 시스템에 로드되는 드라이버 정보(드라이브 Hash, 서명 정보 등)가 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<DriverLoad onmatch="include">
+				<!-- Malicious Driver Hashs -->
+				<Hashes condition="contains">SHA1=f6793243ad20359d8be40d3accac168a15a327fb</Hashes>
+                <Hashes condition="contains">SHA1=6abbc3003c7aa69ce79cbbcd2e3210b07f21d202</Hashes>
+                <Hashes condition="contains">SHA1=3825ebb0b0664b5f0789371240f65231693be37d</Hashes>
+                <Hashes condition="contains">SHA1=b8b123a413b7bccfa8433deba4f88669c969b543</Hashes>
+                <Hashes condition="contains">SHA1=8692274681e8d10c26ddf2b993f31974b04f5bf0</Hashes>
+                <Hashes condition="contains">SHA1=1f25f54e9b289f76604e81e98483309612c5a471</Hashes>
+                <Hashes condition="contains">SHA1=9ee31f1f25f675a12b7bad386244a9fbfa786a87</Hashes>
+                <Hashes condition="contains">SHA1=6a6fe0d69e0ea34d695c3b525e6db639f9ad6ac5</Hashes>
+                <Hashes condition="contains">SHA1=31cc8718894d6e6ce8c132f68b8caaba39b5ba7a</Hashes>
+                <Hashes condition="contains">SHA1=064de88dbbea67c149e779aac05228e5405985c7</Hashes>
+                <Hashes condition="contains">SHA1=b5a8e2104d76dbb04cd9ffe86784113585822375</Hashes>
+                <Hashes condition="contains">SHA1=83506de48bd0c50ea00c9e889fe980f56e6c6e1b</Hashes>
+                <Hashes condition="contains">SHA1=6df35a0c2f6d7d39d24277137ea840078dafb812</Hashes>
+                <Hashes condition="contains">SHA1=d417c0be261b0c6f44afdec3d5432100e420c3ed</Hashes>
+                <Hashes condition="contains">SHA1=7f7d144cc80129d0db3159ea5d4294c34b79b20a</Hashes>
+                <Hashes condition="contains">SHA1=a3ed5cbfbc17b58243289f3cf575bf04be49591d</Hashes>
+                <Hashes condition="contains">SHA1=8e126f4f35e228fdd3aa78d533225db7122d8945</Hashes>
+                <Hashes condition="contains">SHA1=9382981b05b1fb950245313992444bfa0db5f881</Hashes>
+                <Hashes condition="contains">SHA1=0883a9c54e8442a551994989db6fc694f1086d41</Hashes>
+                <Hashes condition="contains">SHA1=9c1c9032aa1e33461f35dbf79b6f2d061bfc6774</Hashes>
+                <Hashes condition="contains">SHA1=3ef30c95e40a854cc4ded94fc503d0c3dc3e620e</Hashes>
+                <Hashes condition="contains">SHA1=4f2d9a70ea24121ae01df8a76ffba1f9cc0fde4a</Hashes>
+                <Hashes condition="contains">SHA1=3b6b35bca1b05fafbfc883a844df6d52af44ccdc</Hashes>
+                <Hashes condition="contains">SHA1=d4f5323da704ff2f25d6b97f38763c147f2a0e6f</Hashes>
+                <Hashes condition="contains">SHA1=745335bcdf02fb42df7d890a24858e16094f48fd</Hashes>
+                <Hashes condition="contains">SHA1=0291d0457acaf0fe8ed5c3137302390469ce8b35</Hashes>
+                <Hashes condition="contains">SHA1=3c1c3f5f5081127229ba0019fbf0efc2a9c1d677</Hashes>
+                <Hashes condition="contains">SHA1=73bac306292b4e9107147db94d0d836fdb071e33</Hashes>
+                <Hashes condition="contains">SHA1=71469dce9c2f38d0e0243a289f915131bf6dd2a8</Hashes>
+                <Hashes condition="contains">SHA1=25bf4e30a94df9b8f8ab900d1a43fd056d285c9d</Hashes>
+                <Hashes condition="contains">SHA1=c257aa4094539719a3c7b7950598ef872dbf9518</Hashes>
+                <Hashes condition="contains">SHA1=a8ddb7565b61bc021cd2543a137e00627f999dcc</Hashes>
+                <Hashes condition="contains">SHA1=d02403f85be6f243054395a873b41ef8a17ea279</Hashes>
+                <Hashes condition="contains">SHA1=b2f955b3e6107f831ebe67997f8586d4fe9f3e98</Hashes>
+                <Hashes condition="contains">SHA1=31fac347aa26e92db4d8c9e1ba37a7c7a2234f08</Hashes>
+                <Hashes condition="contains">SHA1=b34a012887ddab761b2298f882858fa1ff4d99f1</Hashes>
+                <Hashes condition="contains">SHA1=ea4a405445bb6e58c16b81f6d5d2c9a9edde419b</Hashes>
+                <Hashes condition="contains">SHA1=7e836dadc2e149a0b758c7e22c989cbfcce18684</Hashes>
+                <Hashes condition="contains">SHA1=1f3799fed3cf43254fe30dcdfdb8dc02d82e662b</Hashes>
+                <Hashes condition="contains">SHA1=37e6450c7cd6999d080da94b867ba23faa8c32fe</Hashes>
+                <Hashes condition="contains">SHA1=a804ebec7e341b4d98d9e94f6e4860a55ea1638d</Hashes>
+                <Hashes condition="contains">SHA1=76789196eebfd4203f477a5a6c75eefc12d9a837</Hashes>
+                <Hashes condition="contains">SHA1=53f776d9a183c42b93960b270dddeafba74eb3fb</Hashes>
+                <Hashes condition="contains">SHA1=97812f334a077c40e8e642bb9872ac2c49ddb9a2</Hashes>
+                <Hashes condition="contains">SHA1=91568d7a82cc7677f6b13f11bea5c40cf12d281b</Hashes>
+                <Hashes condition="contains">SHA1=e6765d8866cad6193df1507c18f31fa7f723ca3e</Hashes>
+                <Hashes condition="contains">SHA1=6debce728bcff73d9d1d334df0c6b1c3735e295c</Hashes>
+                <Hashes condition="contains">SHA1=22c9da04847c26188226c3a345e2126ef00aa19e</Hashes>
+                <Hashes condition="contains">SHA1=f92faed3ef92fa5bc88ebc1725221be5d7425528</Hashes>
+                <Hashes condition="contains">SHA1=10115219e3595b93204c70eec6db3e68a93f3144</Hashes>
+                <Hashes condition="contains">SHA1=17fa047c1f979b180644906fe9265f21af5b0509</Hashes>
+                <Hashes condition="contains">SHA1=8302802b709ad242a81b939b6c90b3230e1a1f1e</Hashes>
+                <Hashes condition="contains">SHA1=cc65bf60600b64feece5575f21ab89e03a728332</Hashes>
+                <Hashes condition="contains">SHA1=6802e2d2d4e6ee38aa513dafd6840e864310513b</Hashes>
+                <Hashes condition="contains">SHA1=a48aa80942fc8e0699f518de4fd6512e341d4196</Hashes>
+                <Hashes condition="contains">SHA1=cb3f30809b05cf02bc29d4a7796fb0650271e542</Hashes>
+                <Hashes condition="contains">SHA1=48f03a13b0f6d3d929a86514ce48a9352ffef5ad</Hashes>
+                <Hashes condition="contains">SHA1=bc62fe2b38008f154fc9ea65d851947581b52f49</Hashes>
+                <Hashes condition="contains">SHA1=c23eeb6f18f626ce1fd840227f351fa7543bb167</Hashes>
+                <Hashes condition="contains">SHA1=fdbcebb6cafda927d384d7be2e8063a4377d884f</Hashes>
+				<Hashes condition="contains">SHA1=b2f955b3e6107f831ebe67997f8586d4fe9f3e98</Hashes>
+				<Hashes condition="contains">SHA1=088d253bb23f6222dcaf06f7a2430e3a059a35e7</Hashes>
+				<Hashes condition="contains">SHA1=1a392a469fc8c65d80055c1a7aaee27bf5ebe7c4</Hashes>
+				<Hashes condition="contains">SHA1=2616372F708A6FB9665CD28206F4C7DE6458F5C5</Hashes>
+				<Hashes condition="contains">SHA1=C66A1C6FBEACAF2DB288BFF8C064DFE775FD1508</Hashes>
+				<Hashes condition="contains">SHA1=2E38FEE9A54D7666B886FC7D5DFB376246607E5F</Hashes>
+				<Hashes condition="contains">SHA1=D361BDB4B804827D4AE843EF23191927CC612EDD</Hashes>
+				<Hashes condition="contains">SHA1=E69440128D87B630C4655BEE802D799AD44170DD</Hashes>
+				<Hashes condition="contains">SHA1=6FBFC717514CE263E76CEC12C019B67D13EFD621</Hashes>
+				<Hashes condition="contains">SHA1=46BFA026759104C6F80C1D217A99E04FE6E47E33</Hashes>
+				<Hashes condition="contains">SHA1=D9EABFF4DB9CD612616377519C09800E3637060E</Hashes>
+				<Hashes condition="contains">SHA1=F22CD92AA298D9C11D6F28832508EA6AF46813FD</Hashes>
+			</DriverLoad>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<DriverLoad onmatch="exclude">
+				<Signature condition="contains">microsoft</Signature> <!-- Microsoft Driver 탐지 제외 -->
+				<Signature condition="contains">windows</Signature> <!-- Microsoft Driver 탐지 제외 -->
+				<Signature condition="begin with">Intel</Signature> <!-- Intel Driver 탐지 제외 -->
+			</DriverLoad>
+		</RuleGroup>
+		
+		<!-- Event ID 7. Image loaded -->
+		<!-- 설명: Image loaded 이벤트는 프로세스에서 모듈이 로드될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<ImageLoad onmatch="include">
+				<Rule name="PowerShell" groupRelation="and">
+					<OriginalFileName condition="is">amsi.dll</OriginalFileName>
+					<Image condition="excludes any">powershell.exe;powershell_ise.exe</Image>
+				</Rule>
+				<Rule name="Startup Items" groupRelation="and">
+					<Image condition="end with">bginfo.exe</Image>
+					<ImageLoaded condition="contains any">System.ni.dll;System.Core.ni.dll</ImageLoaded>
+				</Rule>
+				<ImageLoaded name="BITS" condition="end with">bitsproxy.dll</ImageLoaded>
+				<Rule name="Process Injection" groupRelation="and">
+					<OriginalFileName condition="is">clr.dll</OriginalFileName>
+					<Image condition="excludes">C:\Windows\Microsoft.NET\</Image>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<OriginalFileName condition="is">clrjit.dll</OriginalFileName>
+					<Image condition="excludes">C:\Windows\Microsoft.NET\</Image>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<OriginalFileName condition="is">mscoreei.dll</OriginalFileName>
+					<Image condition="excludes">C:\Windows\Microsoft.NET\</Image>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<OriginalFileName condition="is">mscoree.dll</OriginalFileName>
+					<Image condition="excludes">C:\Windows\Microsoft.NET\</Image>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<OriginalFileName condition="is">mscoreeis.dll</OriginalFileName>
+					<Image condition="excludes">C:\Windows\Microsoft.NET\</Image>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<OriginalFileName condition="is">mscorlib.dll</OriginalFileName>
+					<Image condition="excludes">C:\Windows\Microsoft.NET\</Image>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<OriginalFileName condition="is">mscorlib.ni.dll</OriginalFileName>
+					<Image condition="excludes">C:\Windows\Microsoft.NET\</Image>
+				</Rule>
+				<ImageLoaded name="Windows Scheduled Tasks" condition="end with">mstask.dll</ImageLoaded>
+				<Rule name="MSHTA with AMSI Bypass" groupRelation="and">
+					<OriginalFileName condition="is">jscript.dll</OriginalFileName>
+					<Image condition="end with">mshta.exe</Image>
+				</Rule>
+				<Rule name="MSHTA with AMSI Bypass" groupRelation="and">
+					<OriginalFileName condition="is">jscript9.dll</OriginalFileName>
+					<Image condition="end with">mshta.exe</Image>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<Image condition="contains all">C:\Program Files;\Microsoft Office\root\Office</Image>
+					<ImageLoaded condition="begin with">C:\Windows\assembly\</ImageLoaded>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<Image condition="contains all">C:\Program Files;\Microsoft Office\root\Office</Image>
+					<ImageLoaded condition="begin with">C:\Windows\Microsoft.NET\assembly\GAC_MSIL</ImageLoaded>
+				</Rule>
+				<Rule name="Process Injection" groupRelation="and">
+					<Image condition="contains all">C:\Program Files;\Microsoft Office\root\Office</Image>
+					<OriginalFileName condition="is">clr.dll</OriginalFileName>
+				</Rule>
+				<ImageLoaded name="PowerShell" condition="end with">system.management.automation.ni.dll</ImageLoaded>
+				<ImageLoaded name="PowerShell" condition="end with">system.management.automation.dll</ImageLoaded>
+				<ImageLoaded name="PowerShell" condition="end with">Microsoft.PowerShell.Commands.Diagnostics.dll</ImageLoaded>
+				<ImageLoaded name="PowerShell" condition="end with">Microsoft.PowerShell.Commands.Management.dll</ImageLoaded>
+				<ImageLoaded name="PowerShell" condition="end with">Microsoft.PowerShell.Commands.Utility.dll</ImageLoaded>
+				<ImageLoaded name="PowerShell" condition="end with">Microsoft.PowerShell.ConsoleHost.dll</ImageLoaded>
+				<ImageLoaded name="PowerShell" condition="end with">Microsoft.PowerShell.Security.dll</ImageLoaded>
+				<Rule name="LSASS Memory" groupRelation="and">
+					<Image condition="end with">rundll32.exe</Image>
+					<OriginalFileName condition="is">comsvcs.dll</OriginalFileName>
+				</Rule>
+				<OriginalFileName name="Scheduled Task" condition="is">taskschd.dll</OriginalFileName>
+		
+				<ImageLoaded condition="begin with">C:\Windows\Debug\</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\Windows\Temp</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\PerfLogs\</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\Windows\Help\</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\Intel\Logs\</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\Temp</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\Windows\repair\</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\Windows\security\</ImageLoaded>
+				<ImageLoaded condition="begin with">C:\Windows\Fonts\</ImageLoaded>
+				<ImageLoaded condition="contains">Downloads</ImageLoaded>
+				<ImageLoaded condition="contains">Public</ImageLoaded>
+				<ImageLoaded condition="contains">Documents</ImageLoaded>
+				<ImageLoaded condition="contains">Music</ImageLoaded>
+				<ImageLoaded condition="contains">Video</ImageLoaded>
+				<ImageLoaded condition="contains">$Recycle.bin\</ImageLoaded>
+				
+				<!-- Malicious DLL Hashs -->
+				<Hashes condition="contains">SHA1=baf1383de353e4881c06516b25e8b2853526f5d9</Hashes>
+				<Hashes condition="contains">SHA1=e6e93120a3c7ec5819d1c219e8eea37d50854e80</Hashes>
+				<Hashes condition="contains">SHA1=49e5b837f857819549363410715ca5590fd6ca7a</Hashes>
+				<Hashes condition="contains">SHA1=fbfddb3910c5418fee037053a43527f076e2d1e0</Hashes>
+				<Hashes condition="contains">SHA1=8a931b10c8c39f1a04e25aec512fe369f71393b8</Hashes>
+				<Hashes condition="contains">SHA1=764a1278c71cfc3944e5b7207340f502034d51c1</Hashes>
+				<Hashes condition="contains">SHA1=78234b87374b6fa6f7d9160e70eea4a8feb98a5e</Hashes>
+				<Hashes condition="contains">SHA1=9320e11b1e46467ddb47cd889cbc96268394fd74</Hashes>
+				<Hashes condition="contains">SHA1=0731BD320633A6D1CA7835E2BBA2C5EE5429B293</Hashes>
+				<Hashes condition="contains">SHA1=EA2646A646662909CD2BF5443E6B0030FB3CC6EB</Hashes>
+				<Hashes condition="contains">SHA1=B82787DC098EEFA8BF917F76CFB294AC3F8349F0</Hashes>
+				<Hashes condition="contains">SHA1=9138F91847F3D0FDE8853490AA2155EDF1567F0B</Hashes>
+				<Hashes condition="contains">SHA1=CCD4D1D54920E410A02EB41CC383515A72585535</Hashes>
+				<Hashes condition="contains">SHA1=878887EA7EABC4B82DF4A613F051C463879F9156</Hashes>
+				<Hashes condition="contains">SHA1=4E08058AFE226934413F457BB24530DBB4B80623</Hashes>
+				<Hashes condition="contains">SHA1=4AE95B332B4A84E18C9AE01E04435339302BD9C2</Hashes>
+				<Hashes condition="contains">SHA1=EE3FDB1B74EF0DCFC6D992E31D8FB3EB0AB95CD2</Hashes>
+				<Hashes condition="contains">SHA1=FB47AFE1943E08D124E5DEEFFE046C119B0B5DC0</Hashes>
+				<Hashes condition="contains">SHA1=A5AEB2C41F446659DAD8D223ED27C8AA99C4699B</Hashes>
+				<Hashes condition="contains">SHA1=DAC7478E20C19CF0A87DADD602AB71976C66EDEC</Hashes>
+				<Hashes condition="contains">SHA1=968668EDE07F268011C0A4526FC02A611A300AF5</Hashes>
+				<Hashes condition="contains">SHA1=BF102C5287B2F43B61E8E86ACB28BA75DC754C72</Hashes>
+				<Hashes condition="contains">SHA1=3A46B2D7221CD17CFA4B9DFBB5796B3A7CB173FF</Hashes>
+				<Hashes condition="contains">SHA1=543EB7AC58D1D9AAD5A7BEE0180520AD6CFC9308</Hashes>
+				<Hashes condition="contains">SHA1=B49E4FF01E52429DF4DE76805ACE59D1BBBF2D6E</Hashes>
+				<Hashes condition="contains">SHA1=BE9CB098C3331CC153E5E1BEA14B8D3B4D8CFD47</Hashes>
+				<Hashes condition="contains">SHA1=57BC9B8B6FC6DCDB7BB36592C87072821A1D951E</Hashes>
+				<Hashes condition="contains">SHA1=7AC780DC1650B88DE13C0263F4AD1116EF07EA34</Hashes>
+				<Hashes condition="contains">SHA1=921F92104AE1C544996C00F0CB5AA9FC77751DD4</Hashes>
+				<Hashes condition="contains">SHA1=70875F14E799BB3CC3E8BF34A5376B9909EF8AAB</Hashes>
+			</ImageLoad>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<ImageLoad onmatch="exclude">
+				<Rule groupRelation="and">
+					<Image condition="is">C:\Windows\System32\cscript.exe</Image>
+					<OriginalFileName condition="is">scrobj.dll</OriginalFileName>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="is">powershell.exe</Image>
+					<OriginalFileName condition="excludes all">mscoree.dll;mscoreei.dll;mscoreeis.dll;clr.dll;clrjit.dll</OriginalFileName>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="is">C:\Windows\System32\mmc.exe</Image>
+					<OriginalFileName condition="contains all">clrjit.dll;mscorlib.dll;clr.dll;mscoreei.dll;mscoree.dll;</OriginalFileName>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="end with">VSTOInstaller.exe</Image>
+					<ImageLoaded condition="begin with">C:\Windows\</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="contains all"> C:\Users\;\AppData\Local\Microsoft\OneDrive;\FileCoAuth.exe</Image>
+					<ImageLoaded condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\;\FileSyncTelemetryExtensions.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="contains all"> C:\Users\;\AppData\Local\Microsoft\OneDrive;\FileCoAuth.exe</Image>
+					<ImageLoaded condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\;\FileCoAuthLib.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="contains all"> C:\Users\;\AppData\Local\Microsoft\OneDrive;\FileCoAuth.exe</Image>
+					<ImageLoaded condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\;\OneDriveTelemetryStable.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="contains all"> C:\Users\;\AppData\Local\Microsoft\OneDrive;\FileCoAuth.exe</Image>
+					<ImageLoaded condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\;\vcruntime140.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="contains all"> C:\Users\;\AppData\Local\Microsoft\OneDrive;\FileCoAuth.exe</Image>
+					<ImageLoaded condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\;\UpdateRingSettings.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="contains all"> C:\Users\;\AppData\Local\Microsoft\OneDrive;\FileCoAuth.exe</Image>
+					<ImageLoaded condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\;\LoggingPlatform.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="contains all"> C:\Users\;\AppData\Local\Microsoft\OneDrive;\FileCoAuth.exe</Image>
+					<ImageLoaded condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\;\FileCoAuth.exe</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="is">C:\Windows\System32\svchost.exe</Image>
+					<ImageLoaded condition="is">C:\Windows\System32\netapi32.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="is">C:\Windows\System32\svchost.exe</Image>
+					<ImageLoaded condition="is">C:\Windows\System32\msvcp110_win.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="is">C:\Windows\System32\svchost.exe</Image>
+					<ImageLoaded condition="is">C:\Windows\System32\dsreg.dll</ImageLoaded>
+				</Rule>
+				<Rule groupRelation="and">
+					<Image condition="is">C:\Windows\System32\svchost.exe</Image>
+					<ImageLoaded condition="is">C:\Windows\System32\perfctrs.dll</ImageLoaded>
+				</Rule>
+			</ImageLoad>
+		</RuleGroup>
+		
+		<!-- Event ID 8. CreateRemoteTread detected -->
+		<!-- 설명: CreateRemoteTread detected 이벤트는 프로세스가 다른 프로세스에서 스레드를 생성할 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<CreateRemoteThread onmatch="include">
+				<SourceImage name="Process Injection" condition="begin with">C:\</SourceImage>
+				<SourceImage name="Process Injection" condition="begin with">\\</SourceImage>
+			</CreateRemoteThread>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<CreateRemoteThread onmatch="exclude"> <!-- 이벤트를 많이 발생시키는 시스템 프로세스를 탐지 제외 -->
+				<SourceImage condition="is">C:\Windows\system32\wbem\WmiPrvSE.exe</SourceImage>
+				<SourceImage condition="is">C:\Windows\system32\svchost.exe</SourceImage>
+				<SourceImage condition="is">C:\Windows\system32\wininit.exe</SourceImage>
+				<SourceImage condition="is">C:\Windows\system32\csrss.exe</SourceImage>
+				<SourceImage condition="is">C:\Windows\system32\services.exe</SourceImage>
+				<SourceImage condition="is">C:\Windows\system32\winlogon.exe</SourceImage>
+				<SourceImage condition="is">C:\Windows\system32\audiodg.exe</SourceImage>
+				<StartModule condition="is">C:\Windows\system32\kernel32.dll</StartModule>
+				<TargetImage condition="is">C:\Program Files (x86)\Google\Chrome\Application\chrome.exe</TargetImage>
+			</CreateRemoteThread>
+		</RuleGroup>
+		
+		<!-- Event ID 9. RawAccessRead detected -->
+		<!-- 설명: RawAccessRead detected 이벤트는 프로세스가 드라이브에서 읽기 작업을 수행하는 경우에 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<RawAccessRead onmatch="include"> <!-- RawAccessRead detected 이벤트를 기록하지 않음 -->
+			</RawAccessRead>
+		</RuleGroup>
+		
+		<!-- Event ID 10. Process accessed -->
+		<!-- 설명: Process accessed 이벤트는 프로세스가 다른 프로세스에 접근할 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<ProcessAccess onmatch="include">
+				<SourceImage condition="begin with">C:\PerfLogs\</SourceImage>
+				<SourceImage condition="begin with">C:\$Recycle.bin\</SourceImage>
+				<SourceImage condition="begin with">C:\Intel\Logs\</SourceImage>
+				<SourceImage condition="begin with">C:\Users\Default\</SourceImage>
+				<SourceImage condition="begin with">C:\Users\Public\</SourceImage>
+				<SourceImage condition="begin with">C:\Windows\Fonts\</SourceImage>
+				<SourceImage condition="begin with">C:\Windows\Debug\</SourceImage>
+				<SourceImage condition="begin with">C:\Windows\Media\</SourceImage>
+				<SourceImage condition="begin with">C:\Windows\Help\</SourceImage>
+				<SourceImage condition="contains">\Temp\</SourceImage>
+			
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\csrss.exe</TargetImage>
+					<GrantedAccess>0x1F1FFF</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\wininit.exe</TargetImage>
+					<GrantedAccess>0x1F1FFF</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\winlogon.exe</TargetImage>
+					<GrantedAccess>0x1F1FFF</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\services.exe</TargetImage>
+					<GrantedAccess>0x1F1FFF</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\lsass.exe</TargetImage>
+					<GrantedAccess>0x1FFFFF</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\lsass.exe</TargetImage>
+					<GrantedAccess>0x1F1FFF</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\lsass.exe</TargetImage>
+					<GrantedAccess>0x1010</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="is">C:\Windows\system32\lsass.exe</TargetImage>
+					<GrantedAccess>0x143A</GrantedAccess>
+				</Rule>
+				<Rule name="Credential Dumping" groupRelation="and">
+					<TargetImage condition="image">lsass.exe</TargetImage>
+					<SourceImage condition="image">wsmprovhost.exe</SourceImage>
+				</Rule>
+				<GrantedAccess name="Credential Dumping">0x810</GrantedAccess>
+				<GrantedAccess name="Credential Dumping">0x0810</GrantedAccess>
+				
+				<Rule name="Process Injection" groupRelation="and">
+					<SourceImage condition="contains all">C:\Program Files;\Microsoft Office\Root\Office</SourceImage>
+					<CallTrace condition="contains">\Microsoft Shared\VBA</CallTrace>
+				</Rule>
+				<GrantedAccess name="Process Injection">0x0820</GrantedAccess>
+				<GrantedAccess name="Process Injection">0x820</GrantedAccess>
+				<GrantedAccess name="Process Hollowing">0x0800</GrantedAccess>
+				<GrantedAccess name="Process Hollowing">0x800</GrantedAccess>
+				
+				<Rule name="Pattern of CobaltStrike" groupRelation="and">
+					<CallTrace condition="contains">UNKNOWN</CallTrace>
+					<GrantedAccess condition="contains any">0x1028;0x1fffff</GrantedAccess>
+				</Rule>
+			</ProcessAccess>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<ProcessAccess onmatch="exclude">
+				<SourceImage condition="is">C:\Program Files (x86)\Adobe\Acrobat DC\Acrobat\Acrobat.exe</SourceImage>
+				<SourceImage condition="is">C:\Program Files\Windows Defender Advanced Threat Protection\MsSense.exe</SourceImage>
+				<SourceImage condition="contains all">C:\ProgramData\Microsoft\Windows Defender Advanced Threat Protection\DataCollection\;\OpenHandleCollector.exe</SourceImage>
+				<SourceImage condition="end with">GoogleUpdate.exe</SourceImage>
+				<SourceImage condition="contains all">C:\Users\;\AppData\Local\Microsoft\OneDrive\StandaloneUpdater\OneDriveSetup.exe</SourceImage>
+				<SourceImage condition="is">C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE</SourceImage>
+				<SourceImage condition="is">C:\Program Files\Microsoft Security Client\MsMpEng.exe</SourceImage>
+				<SourceImage condition="is">C:\Program Files\Windows Defender\MsMpEng.exe</SourceImage>
+				<SourceImage condition="contains all">C:\ProgramData\Microsoft\Windows Defender\Platform\;\MsMpEng.exe</SourceImage>
+				<SourceImage condition="end with">wizcertutil.exe</SourceImage>
+				
+				<Rule groupRelation="and">
+					<SourceImage condition="is">C:\Program Files\Microsoft VS Code\Code.exe</SourceImage>
+					<TargetImage condition="is">C:\Program Files\Microsoft VS Code\Code.exe</TargetImage>
+					<GrantedAccess condition="is">0x100000</GrantedAccess>
+				</Rule>
+				
+				<Rule groupRelation="and">
+					<SourceImage condition="is">C:\Program Files\Microsoft VS Code\Code.exe</SourceImage>
+					<TargetImage condition="is">C:\Program Files\Microsoft VS Code\Code.exe</TargetImage>
+					<GrantedAccess condition="is">0x1401</GrantedAccess>
+				</Rule>
+				
+				<Rule groupRelation="and">
+					<SourceImage condition="contains all">C:\Users\;\AppData\Local\Programs\Microsoft VS Code\Code.exe</SourceImage>
+					<TargetImage condition="contains all">C:\Users\;\AppData\Local\Programs\Microsoft VS Code\Code.exe</TargetImage>
+					<GrantedAccess condition="is">0x1401</GrantedAccess>
+				</Rule>
+				
+				<SourceImage condition="is">C:\Program Files (x86)\VMware\VMware Workstation\vmware-authd.exe</SourceImage>
+				
+				<Rule groupRelation="and">
+					<SourceImage condition="contains any">wpmsvc.exe;nosstarter.npe</SourceImage>
+					<TargetImage condition="is">C:\WINDOWS\system32\lsass.exe</TargetImage>
+				</Rule>
+			</ProcessAccess>
+		</RuleGroup>
+		
+		<!-- Event ID 11. File created -->
+		<!-- 설명: File created 이벤트는 프로세스가 파일을 생성하거나 덮어쓸 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<FileCreate onmatch="include">
+				<TargetFilename condition="begin with">C:\PerfLogs\</TargetFilename> <!-- 공격자가 주로 사용하는 시스템 경로에 생성되는 파일 탐지 -->
+				<TargetFilename condition="begin with">C:\Users\Default\</TargetFilename>
+				<TargetFilename condition="begin with">C:\Users\Public\</TargetFilename>
+				<TargetFilename condition="begin with">C:\Windows\</TargetFilename>
+				<TargetFilename condition="contains">\Temp\</TargetFilename>
+				<TargetFilename name="Desktop" condition="contains">\Desktop\</TargetFilename>
+				<TargetFilename name="Downloads" condition="contains">\Downloads\</TargetFilename>
+				<TargetFilename condition="end with">.cmd</TargetFilename>
+				<TargetFilename condition="end with">.bat</TargetFilename> <!-- Batch Script 파일이 생성되는 것을 탐지 -->
+				<TargetFilename condition="end with">.vbs</TargetFilename> <!-- VisualBasic Script 파일이 생성되는 것을 탐지 -->
+				<TargetFilename condition="end with">.exe</TargetFilename>
+				<TargetFilename condition="end with">.ps1</TargetFilename>
+				<TargetFilename condition="end with">.hta</TargetFilename>
+				<TargetFilename condition="end with">.dll</TargetFilename>
+				<TargetFilename condition="end with">.iso</TargetFilename>
+				<TargetFilename name="Application Shimming" condition="begin with">C:\Windows\AppPatch\Custom</TargetFilename>
+				<TargetFilename name="Task Scheduler Created" condition="begin with">C:\Windows\Tasks\</TargetFilename> <!-- 작업 스케줄러가 생성되는 것을 탐지 -->
+				<TargetFilename name="Task Scheduler Created" condition="begin with">C:\Windows\system32\Tasks</TargetFilename> <!-- 작업 스케줄러가 생성되는 것을 탐지 -->
+				<TargetFilename name="Task Scheduler Created" condition="begin with">C:\Windows\SysWOW64\Tasks</TargetFilename> <!-- 작업 스케줄러가 생성되는 것을 탐지 -->
+				<TargetFilename name="WMI" condition="begin with">C:\Windows\system32\Wbem</TargetFilename>
+				<TargetFilename name="WMI" condition="begin with">C:\Windows\SysWOW64\Wbem</TargetFilename>
+				<TargetFilename name="PowerShell" condition="begin with">C:\Windows\system32\WindowsPowerShell</TargetFilename>
+				<TargetFilename name="PowerShell" condition="begin with">C:\Windows\SysWOW64\WindowsPowerShell</TargetFilename>
+				<TargetFilename condition="begin with">C:\Windows\system32\Drivers</TargetFilename>
+				<TargetFilename condition="begin with">C:\Windows\SysWOW64\Drivers</TargetFilename>
+				<TargetFilename condition="contains">\Startup\</TargetFilename> <!-- 시스템 시작 시 자동으로 시작되는 폴더에 생성되는 파일 탐지 -->
+				<TargetFilename condition="begin with">C:\Windows\system32\GroupPolicy\Machine\Scripts</TargetFilename>
+				<TargetFilename condition="begin with">C:\Windows\system32\GroupPolicy\User\Scripts</TargetFilename>
+				
+				<Rule name="IIS_Webshell Created" groupRelation="and"> <!-- IIS 웹서버 프로세스를 통해 생성된 웹셸 탐지 -->
+					<Image condition="image">w3wp.exe</Image>
+					<TargetFilename condition="contains any">.asp;.aspx;.ashx;.jsp;.jspx;.php</TargetFilename>
+				</Rule>
+				
+				<Rule name="Defender_Malicious File Detected" groupRelation="and"> <!-- Windows Defender에서 악성 파일이 탐지되어 격리 및 탐지 정보가 저장되는 것을 탐지 -->
+					<Image condition="image">MsMpEng.exe</Image>
+					<TargetFilename condition="contains any">\Quarantine\;\Scans\</TargetFilename>
+				</Rule>
+				
+				<Rule name="LSASS Memory Dumping" groupRelation="and">
+					<TargetFilename condition="contains">lsass</TargetFilename>
+					<TargetFilename condition="contains any">dmp;DMP</TargetFilename>
+					<Image condition="image">taskmgr.exe</Image>
+				</Rule>
+				
+				<Image name="BitLocker File Created" condition="image">BitLockerWizard.exe</Image> <!-- BitLocker 랜섬웨어 실행 시 생성되는 복구 키 탐지 -->
+				
+				<TargetFilename condition="end with">pskill.exe</TargetFilename>
+				<TargetFilename condition="end with">screenconnect.exe</TargetFilename>
+				<TargetFilename condition="end with">socks.exe</TargetFilename>
+				<TargetFilename condition="end with">socks2.exe</TargetFilename>
+				<TargetFilename condition="end with">winscp.exe</TargetFilename>
+				<TargetFilename condition="end with">processhacker.exe</TargetFilename>
+				<TargetFilename condition="end with">psexec64.exe</TargetFilename>
+				<TargetFilename condition="end with">file64.exe</TargetFilename>
+				<TargetFilename condition="end with">backstab.exe</TargetFilename>
+				<TargetFilename condition="end with">PassView</TargetFilename>
+				<TargetFilename condition="end with">ADfind.exe</TargetFilename>
+				<TargetFilename condition="end with">netscan.exe</TargetFilename>
+				<TargetFilename condition="end with">mimikatz</TargetFilename>
+				<TargetFilename condition="end with">procdump.exe</TargetFilename>
+				<TargetFilename condition="end with">metasploit</TargetFilename>
+			</FileCreate>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<FileCreate onmatch="exclude">
+				<Image condition="is">C:\Windows\system32\mobsync.exe</Image>
+				<TargetFilename condition="begin with">C:\Windows\system32\DriverStore\Temp\</TargetFilename>
+				<TargetFilename condition="begin with">C:\Windows\system32\wbem\Performance\</TargetFilename>
+				<TargetFilename condition="begin with">C:\Windows\Installer\</TargetFilename>
+				<TargetFilename condition="contains">\NVIDIA\NvBackend\ApplicationOntology\</TargetFilename>
+				<Image condition="contains">setup</Image>
+				<Image condition="contains">Setup</Image>
+				<Image condition="end with">slack.exe</Image>
+				<Image condition="end with">AppData\Local\Microsoft\Teams\current\Teams.exe</Image>
+				<Image condition="contains all">C:\Users\;AppData\Local\JandiApp\;JandiApp.exe</Image>
+				<TargetFilename condition="begin with">C:\$WinREAgent\Scratch\Mount\Windows\WinSxS\</TargetFilename>
+				<TargetFilename condition="begin with">C:\Windows\Prefetch\</TargetFilename>
+				<TargetFilename condition="contains">\FontCache\</TargetFilename>
+				<Image condition="end with">AhnLab\Safe Transaction\AupASD.exe</Image>
+				<Image condition="end with">AhnLab\Safe Transaction\MUpdate2\Update\autoup.exe</Image>
+				<Image condition="end with">AhnLab\Safe Transaction\stsess.exe</Image>
+				
+				<Rule name="" groupRelation="and">
+					<Image condition="is">C:\Windows\Sysmon.exe</Image>
+					<TargetFilename condition="contains">CryptnetUrlCache</TargetFilename>
+				</Rule>
+				
+				<Rule name="Windows Update" groupRelation="or">
+					<TargetFilename condition="is">C:\Windows\WindowsUpdate.log</TargetFilename>
+					<TargetFilename condition="begin with">C:\Windows\Logs\WindowsUpdate\</TargetFilename>
+				</Rule>
+				
+				<Rule name="" groupRelation="and">
+					<Image condition="image">kakaoTalk.exe</Image>
+					<TargetFilename condition="end with">.TMP</TargetFilename>
+				</Rule>
+				<Rule name="" groupRelation="and">
+					<Image condition="image">chrome.exe</Image>
+					<TargetFilename condition="end with">.tmp</TargetFilename>
+				</Rule>
+				<Rule name="" groupRelation="and">
+					<Image condition="is">C:\Windows\system32\svchost.exe</Image>
+					<TargetFilename condition="end with">.tmp</TargetFilename>
+				</Rule>
+				<Rule name="" groupRelation="and">
+					<Image condition="image">ngen.exe</Image>
+					<TargetFilename condition="end with">ngennicupdatelock.dat</TargetFilename>
+				</Rule>
+			</FileCreate>
+		</RuleGroup>
+		
+		<!-- Event ID 12/13/14. Registry Events -->
+		<!-- Event ID 12. Object added or deleted -->
+		<!-- Event ID 13. Value set -->
+		<!-- Event ID 14. Object renamed -->
+		<!-- 설명: Registry Events는 프로세스가 레지스트리 키 또는 값을 생성, 삭제, 수정, 이름변경할 때 기록된다.-->
+		<RuleGroup name="" groupRelation="or">
+			<RegistryEvent onmatch="include">
+				<TargetObject name="Defender_Disabled" condition="end with">\Windows Defender\DisableAntiSpyware</TargetObject> <!-- Windows Defender 비활성화 탐지 -->
+				<TargetObject name="Defender_Real-Time Protection Disabled" condition="begin with">HKLM\SOFTWARE\Microsoft\Windows Defender\Real-Time Protection\DisableRealtimeMonitoring</TargetObject> <!-- Windows Defender의 실시간 검사 비활성화 탐지 -->
+				<TargetObject name="Defender_Folder/File Excluded" condition="begin with">HKLM\SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths</TargetObject> <!-- Windows Defender에서 폴더 또는 파일 탐지 제외 설정 탐지 -->
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\Run</TargetObject> <!-- 시스템 시작 시 자동으로 실행되는 항목 탐지 -->
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\Winlogon</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\RunOnce</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\RunOnceEx</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\RunServicesOnce</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\RunServices</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">Windows\System\Scripts</TargetObject> <!-- 부팅 또는 로그온시 초기화 스크립트 탐지 -->
+				<TargetObject name="Registry_Auto Run" condition="contains">Policies\Explorer\Run</TargetObject> <!-- 시스템 시작 시 자동으로 실행되는 항목 탐지 -->
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\Windows\Load</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\Windows\Run</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\Winlogon\Shell</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">CurrentVersion\Winlogon\System</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="begin with">HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\BootExecute</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="begin with">HKLM\Software\Microsoft\Windows NT\CurrentVersion\AeDebug</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\Startup</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU\</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">software\microsoft\windows\currentversion\explorer\shell folders\common startup</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="contains">software\microsoft\windows\currentversion\explorer\shell folders\startup</TargetObject>
+				<TargetObject name="Registry_Auto Run" condition="begin with">HKLM\software\microsoft\command processor\autorun</TargetObject>
+				<TargetObject name="RDP Connected" condition="contains">\Software\Microsoft\Terminal Server Client</TargetObject> <!-- 원격 데스크탑 연결 탐지 -->
+				<TargetObject name="RDP Port Modified" condition="end with">RDP-tcp\PortNumber</TargetObject> <!-- 원격 데스크탑 사용 포트 변경 탐지 -->
+				<TargetObject name="Shared Folder" condition="begin with">HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Shares</TargetObject> <!-- 공유 폴더 탐지 -->
+				<TargetObject name="LSA Modified" condition="begin with">HKLM\SYSTEM\CurrentControlSet\Control\Lsa\</TargetObject> <!-- LSA 보호 설정 변경 탐지 -->
+				<TargetObject name="Firewall Exception Program Modified" condition="begin with">HKLM\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile\AuthorizedApplications\List</TargetObject> <!-- Windows 방화벽 예외 프로그램 변경 탐지 -->
+				<TargetObject name="Office Enable Editing" condition="contains">Security\Trusted Documents\TrustRecords</TargetObject> <!-- Microsoft Office에서 편집 허용한 문서 탐지-->
+				<TargetObject name="UAC Modified" condition="begin with">HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA</TargetObject> <!-- UAC 상태 변경 탐지 -->
+				<TargetObject name="UAC Remote Restrictions Modified" condition="begin with">HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\LocalAccountTokenFilterPolicy</TargetObject> <!-- UAC 원격 제한 설정 변경 탐지 -->
+				<TargetObject name="IFEO Modified" condition="begin with">HKLM\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\</TargetObject> <!-- IFEO 설정 변경 탐지 -->
+				<TargetObject name="IE Enhanced Security Modification" condition="begin with">HKLM\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap</TargetObject>
+				<TargetObject name="Safemode Modified" condition="begin with">HKLM\SYSTEM\CurrentControlSet\Control\Safeboot\</TargetObject>
+				<TargetObject name="Disable Password Change" condition="contains">\services\Netlogon\Parameters\DisablePasswordChange</TargetObject>
+				<TargetObject name="Disable Windows Event Logging" condition="contains all">\SYSTEM\;\Service\EventLog;Retention</TargetObject>
+				<TargetObject name="Disable Windows Event Logging" condition="contains all">\SYSTEM\;\Service\EventLog;MaxSize</TargetObject>
+				<TargetObject name="Application Shimming" condition="begin with">HKLM\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Custom</TargetObject> <!-- Application Shimming 탐지 -->
+				<TargetObject name="Application Shimming" condition="begin with">HKLM\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\InstalledSDB</TargetObject> <!-- Application Shimming 탐지 -->
+				
+				<TargetObject name="USBSTOR" condition="begin with">HKLM\SYSTEM\ControlSet001\Enum\USBSTOR</TargetObject>
+				
+				<Rule name="Audit Policy Modified" groupRelation="and"> <!-- 감사 정책 변경 탐지 -->
+					<Image condition="image">lsass.exe</Image>
+					<TargetObject condition="begin with">HKLM\SECURITY\Policy\PolAdtEv\</TargetObject>
+				</Rule>
+				
+				<Rule name="USB Connected" groupRelation="and"> <!-- USB가 연결되는 것을 탐지 -->
+					<EventType condition="is">CreateKey</EventType>
+					<TargetObject condition="contains all">HKLM\SOFTWARE\Microsoft\Windows Portable Devices\Devices\;USBSTOR</TargetObject>
+				</Rule>
+				<Rule name="USB Connected" groupRelation="and"> <!-- USB가 연결되는 것을 탐지 -->
+					<TargetObject condition="contains all">HKLM\SYSTEM\;\Enum\USBSTOR</TargetObject>
+				</Rule>
+				<Rule name="USB Disconnected" groupRelation="and"> <!-- USB가 연결 해제되는 것을 탐지 -->
+					<EventType condition="is">DeleteValue</EventType>
+					<TargetObject condition="contains all">HKLM\SOFTWARE\Microsoft\Windows Portable Devices\Devices\;USBSTOR</TargetObject>
+				</Rule>
+			</RegistryEvent>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<RegistryEvent onmatch="exclude">
+				<Image condition="image">OneDrive.exe</Image>
+				<Image condition="image">OneDriveSetup.exe</Image>
+				<Image condition="is">C:\WINDOWS\system32\compattelrunner.exe</Image>
+			</RegistryEvent>
+		</RuleGroup>
+		
+		<!-- Event ID 15. File stream created -->
+		<!-- 설명: File stream created 이벤트는 명명된 파일 스트림이 생성될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<FileCreateStreamHash onmatch="include">
+				<TargetFilename condition="end with">.bat</TargetFilename>
+				<TargetFilename condition="end with">.cmd</TargetFilename>
+				<TargetFilename condition="end with">.exe</TargetFilename>
+				<TargetFilename condition="end with">.lnk</TargetFilename>
+				<TargetFilename condition="end with">.vbs</TargetFilename>
+				<TargetFilename condition="end with">.dll</TargetFilename>
+				<TargetFilename condition="end with">.reg</TargetFilename>
+				<TargetFilename condition="end with">.ps1</TargetFilename>
+				<TargetFilename condition="end with">.hta</TargetFilename>
+				<TargetFilename condition="end with">:Zone.Identifier</TargetFilename>
+			
+				<Rule name="Chrome Downloads" groupRelation="and"> <!-- Chrome 브라우저를 통한 다운로드 탐지 -->
+					<Image condition="image">chrome.exe</Image>
+					<TargetFilename condition="contains">\Downloads\</TargetFilename>
+				</Rule>
+				<Rule name="Edge Downloads" groupRelation="and"> <!-- Edge 브라우저를 통한 다운로드 탐지 -->
+					<Image condition="image">msedge.exe</Image>
+					<TargetFilename condition="contains">\Downloads\</TargetFilename>
+				</Rule>
+				<Rule name="Whale Downloads" groupRelation="and"> <!-- Whale 브라우저를 통한 다운로드 탐지 -->
+					<Image condition="image">whale.exe</Image>
+					<TargetFilename condition="contains">\Downloads\</TargetFilename>
+				</Rule>
+			</FileCreateStreamHash>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<FileCreateStreamHash onmatch="exclude">
+			</FileCreateStreamHash>
+		</RuleGroup>
+		
+		<!-- Event ID 17/18. Pipe Events -->
+		<!-- Event ID 17. Pipe Created -->
+		<!-- Event ID 18. Pipe Connected -->
+		<!-- 설명: Pipe Events는 명명된 파이프가 생성, 연결될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<PipeEvent onmatch="include">
+				<PipeName name="Credential Dump" condition="contains any">\lsadump;\cachedump;\wceservicepipe</PipeName>
+				<PipeName name="Malware" condition="contains any">\isapi_http;\isapi_dg;\isapi_dg2;\sdlrpc;\ahexec;\winsession;\lsassw;\gruntsvc;\bizkaz;\svcctl;\Posh;\jaccdpqnvbrrxlaf;\csexecsvc</PipeName>
+				<PipeName name="Malware" condition="contains any">\atctl;\userpipe;\iehelper;\sdlrpc;\comnap</PipeName>
+				<PipeName name="Malware" condition="contains">\pipe\</PipeName>
+				
+				<Rule name="CobaltStrike" groupRelation="or">
+					<PipeName condition="contains all">MSSE-;-server</PipeName>
+					<PipeName condition="begin with">\postex_</PipeName>
+					<PipeName condition="begin with">\postex_ssh_</PipeName>
+					<PipeName condition="begin with">\status_</PipeName>
+					<PipeName condition="begin with">\msagent_</PipeName>
+				</Rule>
+				
+				<PipeName name="SMB" condition="begin with">\atsvc</PipeName>
+				<PipeName name="SMB" condition="begin with">\msf-pipe</PipeName>
+				<PipeName name="SMB" condition="begin with">\PSEXESVC</PipeName>   
+			</PipeEvent>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<PipeEvent onmatch="exclude">
+				<PipeName condition="is">\scerpc</PipeName>
+				<PipeName condition="is">\ntsvcs</PipeName>
+				<PipeName condition="is">\wkssvc</PipeName>
+			</PipeEvent>
+		</RuleGroup>
+		
+		<!-- Event ID 19/20/21. Wmi Events -->
+		<!-- Event ID 19. WmiEventFilter activity detected -->
+		<!-- Event ID 20. WmiEventConsumer activity detected -->
+		<!-- Event ID 21. WmiEventConsumerToFilter activity detected -->
+		<!-- 설명: Wmi Events는  WMI 이벤트 필터 및 WMI Consumers가 등록되거나, WMI Consumer가 필터에 바인딩될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<WmiEvent onmatch="exclude"> <!-- 모든 Wmi Events를 기록 -->
+			</WmiEvent>
+		</RuleGroup>
+		
+		<!-- Event ID 22. DNS query -->
+		<!-- 설명: DNS query 이벤트는 결과의 성공 여부와 관계없이 프로세스가 DNS 쿼리를 실행할 때, 캐시 되거나, 캐시 되지 않을 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<DnsQuery onmatch="exclude">
+				<!--Network noise-->
+				<QueryName condition="end with">.arpa.</QueryName> <!--Design decision to not log reverse DNS lookups. You will need to decide.-->
+				<QueryName condition="end with">.arpa</QueryName> <!--Design decision to not log reverse DNS lookups. You will need to decide.-->
+				<QueryName condition="end with">.msftncsi.com</QueryName> <!--Microsoft proxy detection | Microsoft default exclusion-->
+				<QueryName condition="is">..localmachine</QueryName>
+				<QueryName condition="is">localhost</QueryName>
+				<!--Microsoft-->
+				<QueryName condition="end with">-pushp.svc.ms</QueryName> <!--Microsoft: Doesn't appear to host customer content or subdomains-->
+				<QueryName condition="end with">.b-msedge.net</QueryName> <!--Microsoft: Doesn't appear to host customer content or subdomains-->
+				<QueryName condition="end with">.bing.com</QueryName> <!-- Microsoft | Microsoft default exclusion -->
+				<QueryName condition="end with">.hotmail.com</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.live.com</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.live.net</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.s-microsoft.com</QueryName> <!--Microsoft-->
+				<QueryName condition="end with">.microsoft.com</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.microsoftonline.com</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.microsoftstore.com</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.ms-acdc.office.com</QueryName> <!--Microsoft: Doesn't appear to host customer content or subdomains-->
+				<QueryName condition="end with">.msedge.net</QueryName> <!--Microsoft: Doesn't appear to host customer content or subdomains-->
+				<QueryName condition="end with">.msn.com</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.msocdn.com</QueryName> <!--Microsoft-->
+				<QueryName condition="end with">.skype.com</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.skype.net</QueryName> <!--Microsoft | Microsoft default exclusion-->
+				<QueryName condition="end with">.windows.com</QueryName> <!--Microsoft-->
+				<QueryName condition="end with">.windows.net.nsatc.net</QueryName> <!--Microsoft-->
+				<QueryName condition="end with">.windowsupdate.com</QueryName> <!--Microsoft-->
+				<QueryName condition="end with">.xboxlive.com</QueryName> <!--Microsoft-->
+				<QueryName condition="is">login.windows.net</QueryName> <!--Microsoft-->
+				<QueryName condition="is">www.msftconnecttest.com</QueryName> <!--Microsoft-->
+				<!--Microsoft:Office365/AzureAD-->
+				<QueryName condition="end with">.activedirectory.windowsazure.com</QueryName> <!--Microsoft: AzureAD-->
+				<QueryName condition="end with">.aria.microsoft.com</QueryName> <!--Microsoft: OneDrive/SharePoint-->
+				<QueryName condition="end with">.msauth.net</QueryName>
+				<QueryName condition="end with">.msftauth.net</QueryName>
+				<QueryName condition="end with">.office.net</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="end with">.opinsights.azure.com</QueryName> <!--Microsoft: AzureAD/InTune client event monitoring-->
+				<QueryName condition="end with">.res.office365.com</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="is">acdc-direct.office.com</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="is">atm-fp-direct.office.com</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="is">loki.delve.office.com</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="is">management.azure.com</QueryName> <!--Microsoft: AzureAD/InTune-->
+				<QueryName condition="is">messaging.office.com</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="is">outlook.office365.com</QueryName> <!--Microsoft: Protected by HSTS-->
+				<QueryName condition="is">portal.azure.com</QueryName> <!--Microsoft: AzureAD/InTune-->
+				<QueryName condition="is">protection.outlook.com</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="is">substrate.office.com</QueryName> <!--Microsoft: Office-->
+				<QueryName condition="end with">.measure.office.com</QueryName> <!--Microsoft: Office-->
+				<!--3rd-party applications-->
+				<QueryName condition="end with">.adobe.com</QueryName> <!--Adobe-->
+				<QueryName condition="end with">.adobe.io</QueryName> <!--Adobe-->
+				<QueryName condition="end with">.mozaws.net</QueryName> <!--Mozilla-->
+				<QueryName condition="end with">.mozilla.com</QueryName> <!--Mozilla-->
+				<QueryName condition="end with">.mozilla.net</QueryName> <!--Mozilla-->
+				<QueryName condition="end with">.mozilla.org</QueryName> <!--Mozilla-->
+				<QueryName condition="end with">.spotify.com</QueryName> <!--Spotify-->
+				<QueryName condition="end with">.spotify.map.fastly.net</QueryName> <!--Spotify-->
+				<QueryName condition="end with">.wbx2.com</QueryName> <!--Webex-->
+				<QueryName condition="end with">.webex.com</QueryName> <!--Webex-->
+				<QueryName condition="is">www.google.com</QueryName> <!--Google-->
+				<QueryName condition="is">www.googletamanager.com</QueryName> <!--Google-->
+				<QueryName condition="is">clients1.google.com</QueryName> <!--Google-->
+				<QueryName condition="is">clients2.google.com</QueryName> <!--Google-->
+				<QueryName condition="is">clients3.google.com</QueryName> <!--Google-->
+				<QueryName condition="is">clients4.google.com</QueryName> <!--Google-->
+				<QueryName condition="is">clients5.google.com</QueryName> <!--Google-->
+				<QueryName condition="is">clients6.google.com</QueryName> <!--Google-->
+				<QueryName condition="is">safebrowsing.googleapis.com</QueryName> <!--Google-->
+				<QueryName condition="is">gms.ahnlab.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">ahloha.ahnlab.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">su5.ahnlab.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">gupdate.ahnlab.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">gactivation.ahnlab.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">webclinic.ahnlab.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">ocsp.sectigo.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">www.expressapisv2.net</QueryName> <!--AhnLab-->
+				<QueryName condition="is">sp.analytics.yahoo.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">crl4.digicert.com</QueryName> <!--AhnLab-->
+				<QueryName condition="is">display.ad.daum.net</QueryName> <!-- Kakaotalk -->
+				<QueryName condition="is">t1.daumcdn.net</QueryName> <!-- Kakaotalk -->
+				<QueryName condition="is">tr.ad.daum.net</QueryName> <!-- Kakaotalk -->
+				<QueryName condition="end with">.kakao.com</QueryName> <!-- Kakaotalk -->
+				<QueryName condition="end with">.kakaocdn.net</QueryName> <!-- Kakaotalk -->
+				<QueryName condition="is">dns.google</QueryName> <!-- Jandi -->
+				<QueryName condition="end with">.jandi.com</QueryName> <!-- Jandi -->
+				<QueryName condition="is">jandi-box.com</QueryName> <!-- Jandi -->
+				<QueryName condition="is">www.notion.so</QueryName> <!-- Notion -->
+				<QueryName condition="is">downloads.slack-edge.com</QueryName> <!-- Slack -->
+				<QueryName condition="is">wpad</QueryName> <!-- Slack -->
+				<QueryName condition="end with">discordapp.com</QueryName> <!-- Discord -->
+				<QueryName condition="is">redirector.gvt1.com</QueryName> <!-- Discord -->
+				<QueryName condition="is">latency.discord.media</QueryName> <!-- Discord -->
+				<QueryName condition="end with">discordapp.net</QueryName> <!-- Discord -->
+				<QueryName condition="is">status.discord.com</QueryName> <!-- Discord -->
+				<QueryName condition="end with">discord.gg</QueryName> <!-- Discord -->
+				<QueryName condition="end with">hcaptcha.com</QueryName> <!-- Discord -->
+				<QueryName condition="is">simg.wooribank.com</QueryName> <!-- Banks -->
+			</DnsQuery>
+		</RuleGroup>
+		
+		<!-- Event ID 23. File Delete archived -->
+		<!-- 설명: File Delete archived 이벤트는 시스템에서 파일이 삭제됐을 때 기록되며, 삭제된 파일이 ArchiveDirectory에 저장된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<FileDelete onmatch="include">
+				<Rule name="Office documents" groupRelation="or">
+					<TargetFilename condition="end with">.doc</TargetFilename>
+					<TargetFilename condition="end with">.dot</TargetFilename>
+					<TargetFilename condition="end with">.docx</TargetFilename>
+					<TargetFilename condition="end with">.docm</TargetFilename>
+					<TargetFilename condition="end with">.doc</TargetFilename>
+					<TargetFilename condition="end with">.dot</TargetFilename>
+					<TargetFilename condition="end with">.docx</TargetFilename>
+					<TargetFilename condition="end with">.docm</TargetFilename>
+					<TargetFilename condition="end with">.dotx</TargetFilename>
+					<TargetFilename condition="end with">.dotm</TargetFilename>
+					<TargetFilename condition="end with">.docb</TargetFilename>
+					<TargetFilename condition="end with">.xls</TargetFilename>
+					<TargetFilename condition="end with">.xlt</TargetFilename>
+					<TargetFilename condition="end with">.xlm</TargetFilename>
+					<TargetFilename condition="end with">.xlsx</TargetFilename>
+					<TargetFilename condition="end with">.xlsm</TargetFilename>
+					<TargetFilename condition="end with">.xltx</TargetFilename>
+					<TargetFilename condition="end with">.xltm</TargetFilename>
+					<TargetFilename condition="end with">.xlsb</TargetFilename>
+					<TargetFilename condition="end with">.ppt</TargetFilename>
+					<TargetFilename condition="end with">.pptx</TargetFilename>
+					<TargetFilename condition="end with">.pptm</TargetFilename>
+					<TargetFilename condition="end with">.potx</TargetFilename>
+					<TargetFilename condition="end with">.potm</TargetFilename>
+					<TargetFilename condition="end with">.odt</TargetFilename>
+					<TargetFilename condition="end with">.ods</TargetFilename>
+					<TargetFilename condition="end with">.odp</TargetFilename>
+					<TargetFilename condition="end with">.pdf</TargetFilename>
+					<TargetFilename condition="end with">.rtf</TargetFilename>
+				</Rule>
+				<Rule name="Scripts and payloads" groupRelation="or">
+				    <TargetFilename condition="end with">.aspx</TargetFilename>
+				    <TargetFilename condition="end with">.bat</TargetFilename>
+				    <TargetFilename condition="end with">.ps1</TargetFilename>
+				    <TargetFilename condition="end with">.vbs</TargetFilename>
+				    <TargetFilename condition="end with">.vba</TargetFilename>
+				    <TargetFilename condition="end with">.hta</TargetFilename>
+				    <TargetFilename condition="end with">.jar</TargetFilename>
+				    <TargetFilename condition="end with">.js</TargetFilename>
+				    <TargetFilename condition="end with">.cmd</TargetFilename>
+				    <TargetFilename condition="end with">.sh</TargetFilename>
+				    <TargetFilename condition="end with">.sct</TargetFilename>
+				</Rule>
+			</FileDelete>
+		</RuleGroup>
+		
+		<RuleGroup name="" groupRelation="or">
+			<FileDelete onmatch="exclude">
+				<Rule name="" groupRelation="and">
+					<Image condition="is">C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe</Image>
+					<TargetFilename condition="end with">.js</TargetFilename>
+				</Rule>
+				<Rule name="" groupRelation="and">
+					<Image condition="is">C:\Windows\system32\taskhostw.exe</Image>
+					<TargetFilename condition="end with">.js</TargetFilename>
+				</Rule>
+				<Rule name="" groupRelation="and">
+					<Image condition="contains all">C:\Program Files\Microsoft Office\Root\;SDXHelper.exe</Image>
+					<TargetFilename condition="end with">.js</TargetFilename>
+				</Rule>
+				<Rule name="" groupRelation="and">
+					<Image condition="contains all">C:\Windows\system32\DllHost.exe</Image>
+					<TargetFilename condition="end with">.js</TargetFilename>
+				</Rule>
+			</FileDelete>
+		</RuleGroup>
+		
+		<!-- Event ID 24. Clipboard changed -->
+		<!-- 설명: Clipboard changed 이벤트는 시스템 클립보드 내용이 변경될 때 기록되며, 변경된 데이터는 ArchiveDirectory에 저장된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<ClipboardChange onmatch="include"> <!-- 모든 클립보드 변경 내용을 기록하지 않음 -->
+			</ClipboardChange>
+		</RuleGroup>
+		
+		<!-- Event ID 25. Process Tampering -->
+		<!-- 설명: Process Tampering 이벤트는 프로세스 변조 기술이 탐지될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<ProcessTampering onmatch="exclude"> <!-- 모든 프로세스 변조 행위를 기록 -->
+			</ProcessTampering>
+		</RuleGroup>
+		
+		<!-- Event ID 27. File Block Executable -->
+		<!-- 설명: File Block Executable 이벤트는 실행파일 생성을 차단할 때 기록된다. -->
+		<RuleGroup groupRelation="or">
+			<FileBlockExecutable onmatch="include"> <!-- 모든 실행파일을 차단 및 기록하지 않음 -->
+			</FileBlockExecutable>
+		</RuleGroup>
+		
+		<!-- Event ID 28. File Block Shredding -->
+		<!-- 설명: File Block Shredding 이벤트는 파일이 완전 삭제될 때 기록된다.  -->
+		<RuleGroup groupRelation="or">
+			<FileBlockShredding onmatch="include"> <!-- 모든 파일의 완전 삭제를 차단 및 기록하지 않음 -->
+			</FileBlockShredding>
+		</RuleGroup>
+		
+		<!-- Event ID 29. File Executable Detected -->
+		<!-- 설명: File Executable Detected 이벤트는 실행 파일 생성이 탐지될 때 기록된다. -->
+		<RuleGroup name="" groupRelation="or">
+			<FileExecutableDetected onmatch="include">
+				<Image condition="image">powershell.exe</Image>
+			</FileExecutableDetected>
+		</RuleGroup>
+	</EventFiltering>
+</Sysmon>
